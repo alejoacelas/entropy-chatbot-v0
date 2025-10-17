@@ -1,0 +1,19 @@
+{
+  "name": "evaluation-reviewer",
+  "version": "1.0.0",
+  "description": "Node.js web app for reviewing promptfoo evaluation results",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["promptfoo", "evaluation", "review"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.4.1",
+    "csv-stringify": "^6.4.6"
+  }
+}

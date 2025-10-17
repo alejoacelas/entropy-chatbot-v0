@@ -1,0 +1,196 @@
+/* Custom styles for Evaluation Reviewer */
+
+:root {
+  --smooth-scroll: smooth;
+}
+
+html {
+  scroll-behavior: var(--smooth-scroll);
+}
+
+/* Make sidebar visible on desktop */
+@media (min-width: 1024px) {
+  .drawer-toggle:checked {
+    display: none;
+  }
+
+  .drawer-side {
+    z-index: 40;
+    position: relative;
+    transform: translateX(0);
+    visibility: visible;
+    /* Ensure sidebar has a fixed width and sits on the left */
+    width: 20rem; /* matches w-80 */
+    order: -1;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .drawer-overlay {
+    display: none;
+  }
+
+  .drawer {
+    display: flex;
+  }
+
+  /* Allow main content to take remaining space without causing overflow */
+  .drawer-content {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+/* Typography */
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Cards */
+.card {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Textarea */
+.textarea {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Make notes textarea span the full container width with slight spacing */
+#notes-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.25rem;
+}
+
+/* Range slider */
+.range {
+  height: 0.375rem;
+}
+
+.range::-webkit-slider-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Rating label */
+#rating-label {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Response text wrapping */
+#response-text,
+#question-text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* Sidebar stats */
+.stats {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.stat {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.stat:last-child {
+  border-bottom: none;
+}
+
+.stat-title {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Focus states */
+button:focus,
+select:focus,
+textarea:focus,
+input:focus {
+  outline: 2px solid hsl(var(--p) / 1);
+  outline-offset: 2px;
+}
+
+/* Disabled state */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Form controls */
+.select,
+.textarea {
+  border-color: hsl(var(--bc) / 0.2);
+  transition: all 0.2s ease;
+}
+
+.select:hover,
+.textarea:hover {
+  border-color: hsl(var(--bc) / 0.4);
+}
+
+/* Sticky sidebar on mobile */
+@media (max-width: 1024px) {
+  .drawer-side {
+    z-index: 40;
+  }
+}
+
+/* Success animation */
+.btn-success {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Keyboard hint */
+.text-xs {
+  font-size: 0.75rem;
+}
+
+/* Print styles */
+@media print {
+  .drawer-toggle,
+  .drawer-side,
+  .navbar,
+  button,
+  input[type="range"] {
+    display: none;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+
+  .text-lg {
+    font-size: 1rem;
+  }
+
+  #rating-slider {
+    width: 100%;
+  }
+}
