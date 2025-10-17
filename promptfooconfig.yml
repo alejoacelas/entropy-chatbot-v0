@@ -1,0 +1,23 @@
+description: "Entropy Chatbot Evaluation"
+
+prompts:
+  - id: file://data/prompts/baseline.md
+    label: baseline
+
+providers:
+  - id: openai:gpt-4.1-mini
+    label: "GPT-4.1-mini no web search"
+    config:
+      max_output_tokens: 4096
+
+# Load test cases from CSV file
+# CSV should have 'prompt' column for questions, other columns become metadata/context
+tests: file://data/questions/30-real-questions.csv
+
+defaultTest:
+  assert:
+    - type: llm-rubric
+      provider: openai:gpt-4.1-mini
+      value: 'Was the answer complete without any cutoffs? Mark as fail if the answer is truncated'
+
+
