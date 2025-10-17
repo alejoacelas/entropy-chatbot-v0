@@ -1,1 +1,0 @@
-Your response should ideally be <X characters long

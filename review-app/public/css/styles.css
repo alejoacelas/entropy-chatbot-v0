@@ -14,23 +14,24 @@ html {
     display: none;
   }
 
+  .drawer {
+    display: flex;
+    flex-direction: row;
+  }
+
   .drawer-side {
     z-index: 40;
     position: relative;
     transform: translateX(0);
     visibility: visible;
-    /* Ensure sidebar has a fixed width and sits on the left */
-    width: 20rem; /* matches w-80 */
+    width: auto;
     order: -1;
+    flex-shrink: 0;
     border-right: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   .drawer-overlay {
     display: none;
-  }
-
-  .drawer {
-    display: flex;
   }
 
   /* Allow main content to take remaining space without causing overflow */

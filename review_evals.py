@@ -21,7 +21,7 @@ st.set_page_config(
 
 def load_promptfoo_results():
     """Load evaluation results from promptfoo JSON file."""
-    results_file = Path("results.json")
+    results_file = Path("data/evals/results.json")
     if not results_file.exists():
         return None
 

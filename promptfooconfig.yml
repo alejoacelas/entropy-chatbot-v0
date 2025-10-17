@@ -1,14 +1,25 @@
 description: "Entropy Chatbot Evaluation"
 
 prompts:
-  - id: file://data/prompts/baseline.md
-    label: baseline
+  - id: file://data/prompts/direct-v0.txt
+    label: direct-v0
 
 providers:
-  - id: openai:gpt-4.1-mini
-    label: "GPT-4.1-mini no web search"
+  - id: 'anthropic:messages:claude-sonnet-4-5-20250929'
+    label: 'Claude Sonnet 4 (Web Search + Fetch)'
+    prompts: [direct-v0]
     config:
-      max_output_tokens: 4096
+      max_tokens: 12000
+      thinking:
+        type: 'enabled'
+        budget_tokens: 10000
+      tools:
+        - type: web_search_20250305
+          name: web_search
+          max_uses: 3
+        - type: web_fetch_20250910
+          name: web_fetch
+          max_uses: 3
 
 # Load test cases from CSV file
 # CSV should have 'prompt' column for questions, other columns become metadata/context
