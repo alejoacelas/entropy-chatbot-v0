@@ -1,0 +1,288 @@
+/* Glass Morphism Base Styles */
+:root {
+  --glass-blur: 12px;
+  --glass-opacity: 0.6;
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --glow-soft: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --glow-medium: 0 12px 48px rgba(0, 0, 0, 0.15);
+  --glow-active: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+/* Typography Enhancements */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+h1 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Text Improvements */
+body {
+  font-feature-settings: "kern" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glass Box Styling - Main Content Areas */
+[style*="backgroundColor: 'var(--mantine-color-gray-0)'"] {
+  background: rgba(255, 255, 255, var(--glass-opacity)) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glow-soft);
+  transition: all var(--transition-smooth) !important;
+}
+
+[style*="backgroundColor: 'var(--mantine-color-gray-0)'"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Glass Box Styling - Blue Rating Section */
+[style*="backgroundColor: 'var(--mantine-color-blue-0)'"] {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  border: 1.5px solid rgba(59, 130, 246, 0.25) !important;
+  box-shadow: var(--glow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all var(--transition-smooth);
+}
+
+/* Button Enhancements */
+.mantine-Button-root {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.mantine-Button-root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-smooth);
+  pointer-events: none;
+}
+
+.mantine-Button-root:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.mantine-Button-root:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.mantine-Button-root:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Primary Button Style */
+.mantine-Button-root[data-variant="default"] {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: var(--mantine-color-gray-9);
+}
+
+.mantine-Button-root:not([data-variant="default"]) {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.mantine-Button-root:not([data-variant="default"]):hover:not(:disabled) {
+  box-shadow: var(--glow-active);
+}
+
+.mantine-Button-root:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Slider Enhancement */
+/* .mantine-Slider-root {
+  --slider-size: 6px;
+} */
+
+/* .mantine-Slider-track {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.6) 100%);
+  height: 6px;
+  border-radius: 3px;
+  backdrop-filter: blur(4px);
+} */
+
+.mantine-Slider-bar {
+  background: linear-gradient(90deg, rgb(59, 130, 246) 0%, rgb(99, 102, 241) 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.mantine-Slider-thumb {
+  background: linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(99, 102, 241) 100%);
+  border: 2px solid white;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5);
+  transition: all var(--transition-smooth);
+  width: 20px;
+  height: 20px;
+}
+
+.mantine-Slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.6);
+}
+
+/* Input/Textarea Enhancement */
+.mantine-Input-input,
+.mantine-Textarea-input {
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  transition: all var(--transition-smooth);
+}
+
+.mantine-Input-input::placeholder,
+.mantine-Textarea-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+  font-weight: 400;
+}
+
+.mantine-Input-input:focus,
+.mantine-Textarea-input:focus {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
+  box-shadow: inset 0 2px 8px rgba(59, 130, 246, 0.1), 0 0 20px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Badge Enhancement */
+.mantine-Badge-root {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(59, 130, 246, 0.25) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transition: all var(--transition-smooth);
+}
+
+/* Select/Dropdown Enhancement */
+.mantine-Select-input {
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  transition: all var(--transition-smooth);
+  font-weight: 500;
+}
+
+.mantine-Select-input:focus {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Progress Bar Enhancement */
+.mantine-Progress-root {
+  background: rgba(0, 0, 0, 0.05) !important;
+  backdrop-filter: blur(4px);
+}
+
+.mantine-Progress-bar {
+  background: linear-gradient(90deg, rgb(34, 197, 94) 0%, rgb(59, 130, 246) 100%);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  transition: width var(--transition-smooth);
+}
+
+/* Divider Enhancement */
+.mantine-Divider-root {
+  border-color: rgba(0, 0, 0, 0.08);
+  opacity: 0.8;
+}
+
+/* Stack & Layout Animations */
+.mantine-Stack-root {
+  transition: all var(--transition-smooth);
+}
+
+/* Title Styling */
+.mantine-Title-root {
+  color: var(--mantine-color-gray-9);
+  font-weight: 700;
+}
+
+/* Text Enhancements */
+.mantine-Text-root {
+  transition: color var(--transition-smooth);
+}
+
+.mantine-Text-root[style*="color: dimmed"] {
+  color: rgba(0, 0, 0, 0.55) !important;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+/* AppShell Navbar Enhancement */
+.mantine-AppShell-navbar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive glass effect for mobile */
+@media (max-width: 768px) {
+  .mantine-AppShell-navbar {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .mantine-Button-root:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.4) 0%, rgba(99, 102, 241, 0.3) 100%);
+  border-radius: 4px;
+  transition: background var(--transition-smooth);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.6) 0%, rgba(99, 102, 241, 0.5) 100%);
+}
+
+/* Focus visible ring for accessibility */
+.mantine-Button-root:focus-visible,
+.mantine-Input-input:focus-visible,
+.mantine-Textarea-input:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}

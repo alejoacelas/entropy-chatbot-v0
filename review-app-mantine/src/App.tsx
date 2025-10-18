@@ -554,8 +554,9 @@ function App() {
                     placeholder="Add comments..."
                     value={localNotes}
                     onChange={(e) => setLocalNotes(e.currentTarget.value)}
-                    minRows={5}
+                    rows={8}
                     size="sm"
+                    style={{ minHeight: '200px' }}
                   />
                   <Text size="xs" c="dimmed">
                     Enter to focus · ⌘↵ to save
