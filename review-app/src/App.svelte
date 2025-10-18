@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { marked } from 'marked';
 
   interface TestResult {
     testIdx: number;
@@ -106,6 +107,11 @@
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   }
 
+  function parseMarkdown(text: string): string {
+    if (!text) return '';
+    return marked.parse(text) as string;
+  }
+
   function getUniquePrompts(): string[] {
     const unique = new Set<string>();
     allResults.forEach((r) => unique.add(r.prompt?.label || 'unknown'));
@@ -182,14 +188,14 @@
   const ratedCount = results.filter((r) => {
     const annotation =
       annotations[evalId]?.[r.testIdx]?.[selectedPrompt]?.[selectedProvider] ||
-      {};
+      ({ rating: 0, notes: '' } as Annotation);
     return (annotation.rating || 0) > 0;
   }).length;
 
   const allRatings = results.map((r) => {
     const annotation =
       annotations[evalId]?.[r.testIdx]?.[selectedPrompt]?.[selectedProvider] ||
-      {};
+      ({ rating: 0, notes: '' } as Annotation);
     return annotation.rating || 0;
   });
 
@@ -258,7 +264,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   .header {
@@ -367,7 +373,114 @@
     line-height: 1.6;
     border: 1px solid #e0e0e0;
     overflow-y: auto;
-    flex: 1;
+    min-height: 60vh;
+    flex: 0 0 auto;
+  }
+
+  .response :global(h1),
+  .response :global(h2),
+  .response :global(h3),
+  .response :global(h4),
+  .response :global(h5),
+  .response :global(h6) {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .response :global(h1) {
+    font-size: 20px;
+  }
+  .response :global(h2) {
+    font-size: 18px;
+  }
+  .response :global(h3) {
+    font-size: 16px;
+  }
+
+  .response :global(p) {
+    margin: 8px 0;
+  }
+
+  .response :global(ul),
+  .response :global(ol) {
+    margin: 8px 0;
+    padding-left: 24px;
+  }
+
+  .response :global(li) {
+    margin: 4px 0;
+  }
+
+  .response :global(code) {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+  }
+
+  .response :global(pre) {
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+
+  .response :global(pre code) {
+    background: none;
+    padding: 0;
+  }
+
+  .response :global(blockquote) {
+    border-left: 3px solid #e0e0e0;
+    padding-left: 12px;
+    margin: 8px 0;
+    color: #666;
+    font-style: italic;
+  }
+
+  .response :global(a) {
+    color: #2196f3;
+    text-decoration: none;
+  }
+
+  .response :global(a:hover) {
+    text-decoration: underline;
+  }
+
+  .response :global(strong) {
+    font-weight: 600;
+  }
+
+  .response :global(em) {
+    font-style: italic;
+  }
+
+  .response :global(hr) {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 16px 0;
+  }
+
+  .response :global(table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 8px 0;
+  }
+
+  .response :global(th),
+  .response :global(td) {
+    border: 1px solid #e0e0e0;
+    padding: 8px;
+    text-align: left;
+  }
+
+  .response :global(th) {
+    background: #f9f9f9;
+    font-weight: 600;
   }
 
   .metrics-section {
@@ -427,6 +540,7 @@
     background: #ddd;
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
   }
 
   .rating-slider::-webkit-slider-thumb {
@@ -457,7 +571,7 @@
 
   .notes-section {
     margin-top: 16px;
-    flex: 1;
+    flex: 0.7;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -625,7 +739,9 @@
             id="jump-select"
             bind:value={currentTestIdx}
             on:change={() => {
-              currentTestIdx = parseInt(currentTestIdx);
+              currentTestIdx = typeof currentTestIdx === 'string' 
+                ? parseInt(currentTestIdx, 10) 
+                : currentTestIdx;
             }}
           >
             {#each results as result, idx}
@@ -666,7 +782,7 @@
 
             <div class="response">
               <strong>Model Response:</strong><br />
-              {results[currentTestIdx].response?.output || 'No output'}
+              {@html parseMarkdown(results[currentTestIdx].response?.output || 'No output')}
             </div>
 
             <div class="metrics-section">
@@ -715,7 +831,9 @@
                 max="5"
                 bind:value={rating}
                 on:change={() => {
-                  rating = parseInt(rating);
+                  rating = typeof rating === 'string' 
+                    ? parseInt(rating, 10) 
+                    : rating;
                 }}
               />
               <div class="rating-display">
