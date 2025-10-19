@@ -135,11 +135,24 @@ export function exportToCSV(
   // Get unique test indices
   const testIndices = Array.from(new Set(results.map(r => r.testIdx))).sort((a, b) => a - b);
 
+  // Collect all unique metadata keys (excluding 'prompt')
+  const allMetadataKeys = new Set<string>();
+  for (const testIdx of testIndices) {
+    const firstResult = results.find(r => r.testIdx === testIdx);
+    const vars = firstResult?.testCase?.vars || {};
+    Object.keys(vars).forEach(key => {
+      if (key !== 'prompt') {
+        allMetadataKeys.add(key);
+      }
+    });
+  }
+  const sortedMetadataKeys = Array.from(allMetadataKeys).sort();
+
   // Build CSV rows
   const rows: string[][] = [];
-  
+
   // Header row
-  const headers = ['testIdx', 'prompt_text'];
+  const headers = ['testIdx', 'prompt_text', ...sortedMetadataKeys];
   for (const { prompt, provider } of sortedCombinations) {
     const cleanPrompt = prompt.split(':')[0].trim();
     const cleanProvider = provider.replace(/[^a-zA-Z0-9]/g, '_');
@@ -154,11 +167,18 @@ export function exportToCSV(
   // Data rows
   for (const testIdx of testIndices) {
     const row: string[] = [String(testIdx)];
-    
-    // Get prompt text from first result for this testIdx
+
+    // Get prompt text and metadata from first result for this testIdx
     const firstResult = results.find(r => r.testIdx === testIdx);
     const promptText = firstResult?.testCase?.vars?.prompt || '';
     row.push(promptText);
+
+    // Add all metadata values
+    const vars = firstResult?.testCase?.vars || {};
+    for (const key of sortedMetadataKeys) {
+      const value = vars[key as keyof typeof vars];
+      row.push(typeof value === 'string' ? value : JSON.stringify(value || ''));
+    }
 
     for (const { prompt, provider } of sortedCombinations) {
       const key = `${testIdx}-${prompt}-${provider}`;

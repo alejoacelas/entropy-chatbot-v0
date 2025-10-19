@@ -387,6 +387,23 @@ function App() {
                 </CardContent>
               </Card>
 
+              {/* Test Case Metadata */}
+              <div className="flex flex-col gap-4">
+                <h4 className="text-lg font-semibold">📌 Test Case Metadata</h4>
+                {Object.entries(currentResult.testCase?.vars || {})
+                  .filter(([key]) => key !== 'prompt')
+                  .map(([key, value]) => (
+                    <div key={key}>
+                      <p className="text-xs text-muted-foreground font-bold">{key}</p>
+                      <p className="text-xs">
+                        {typeof value === 'string'
+                          ? truncateText(value, 200)
+                          : JSON.stringify(value)}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+
               {/* Evaluation Metrics */}
               <div className="flex flex-col gap-4">
                 <h4 className="text-lg font-semibold">📊 Evaluation Metrics</h4>
@@ -415,35 +432,6 @@ function App() {
                     <strong>Reason:</strong> {currentResult.gradingResult.reason}
                   </p>
                 )}
-              </div>
-
-              {/* Test Case Metadata */}
-              <div className="flex flex-col gap-4">
-                <h4 className="text-lg font-semibold">📌 Test Case Metadata</h4>
-                {Object.entries(currentResult.testCase?.vars || {})
-                  .filter(
-                    ([key]) =>
-                      ![
-                        'prompt',
-                        'Source',
-                        'Bot current capability expectations; assuming we have Bot Guide correct, the Bot...',
-                        'How good of a test for the Bot is this question?',
-                        'Applies to:',
-                        'JP Answer',
-                        'Notes',
-                      ].includes(key) || key === 'prompt'
-                  )
-                  .slice(0, 4)
-                  .map(([key, value]) => (
-                    <div key={key}>
-                      <p className="text-xs text-muted-foreground font-bold">{key}</p>
-                      <p className="text-xs">
-                        {typeof value === 'string'
-                          ? truncateText(value, 200)
-                          : JSON.stringify(value)}
-                      </p>
-                    </div>
-                  ))}
               </div>
             </div>
 
