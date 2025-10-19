@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   loadPromptfooResults,
   loadAnnotations,
@@ -17,6 +16,8 @@ import {
   getAnnotation,
   setAnnotation,
   truncateText,
+  exportAnnotationsToJSON,
+  exportToCSV,
 } from './utils';
 import type { PromptfooResult, AnnotationsStore } from './types';
 
@@ -312,6 +313,27 @@ function App() {
         <Separator />
 
         <div className="flex flex-col gap-4">
+          <h3 className="text-lg font-semibold">💾 Export</h3>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => exportToCSV(data!, annotations)}
+            >
+              📊 Download CSV
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => exportAnnotationsToJSON(annotations)}
+            >
+              📄 Download Annotations JSON
+            </Button>
+          </div>
+
+        <Separator />
+
+        <div className="flex flex-col gap-4">
           <h3 className="text-lg font-semibold">📊 Stats</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -331,6 +353,8 @@ function App() {
               <p className="text-lg font-bold">{allRatings.filter((r) => r === 1).length}</p>
             </div>
           </div>
+        </div>
+
         </div>
       </div>
 

@@ -120,9 +120,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -143,9 +141,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -224,9 +220,7 @@
             "Notes": "Claude gave a really long answer at first that had a lot of assumptions. Had to do a lot of editing to get it to this. ",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
             "How good of a test for the Bot is this question?": "3 - Would be difficult but manageable for the Bot",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -247,9 +241,7 @@
           "Notes": "Claude gave a really long answer at first that had a lot of assumptions. Had to do a lot of editing to get it to this. ",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
           "How good of a test for the Bot is this question?": "3 - Would be difficult but manageable for the Bot",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -328,9 +320,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -351,9 +341,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -432,9 +420,7 @@
             "Notes": "Would need to build resource for bot",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
             "How good of a test for the Bot is this question?": "3 - Would be difficult but manageable for the Bot",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -455,9 +441,7 @@
           "Notes": "Would need to build resource for bot",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
           "How good of a test for the Bot is this question?": "3 - Would be difficult but manageable for the Bot",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -536,9 +520,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
             "How good of a test for the Bot is this question?": "2 - Bot might be able to help, but expect struggles or mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -559,9 +541,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
           "How good of a test for the Bot is this question?": "2 - Bot might be able to help, but expect struggles or mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -640,9 +620,7 @@
             "Notes": "Bot maybe could answer on its own, we can test. \n\nIf it doesn't answer well we would need to build a resource. ",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -663,9 +641,7 @@
           "Notes": "Bot maybe could answer on its own, we can test. \n\nIf it doesn't answer well we would need to build a resource. ",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -744,9 +720,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
             "How good of a test for the Bot is this question?": "2 - Bot might be able to help, but expect struggles or mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -767,9 +741,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
           "How good of a test for the Bot is this question?": "2 - Bot might be able to help, but expect struggles or mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -848,9 +820,7 @@
             "Notes": "Would need to build resource for bot",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -871,9 +841,7 @@
           "Notes": "Would need to build resource for bot",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -952,9 +920,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -975,9 +941,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1055,9 +1019,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1078,9 +1040,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1159,9 +1119,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1182,9 +1140,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1263,9 +1219,7 @@
             "Notes": "If it can't get the answer, it should refer to or suggest finding a professional like Wavefront Security. \n\nThis would be a good test to see if it tried the high-level basics, and if it didn't succeed then stop trying and say get help. I have seen llms just keep trying to help and be more likely to make things up when it can't actually help.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1286,9 +1240,7 @@
           "Notes": "If it can't get the answer, it should refer to or suggest finding a professional like Wavefront Security. \n\nThis would be a good test to see if it tried the high-level basics, and if it didn't succeed then stop trying and say get help. I have seen llms just keep trying to help and be more likely to make things up when it can't actually help.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1366,9 +1318,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1389,9 +1339,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1469,9 +1417,7 @@
             "Notes": "If it asks the right questions and the Guide is right, this should be easily answerable",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1492,9 +1438,7 @@
           "Notes": "If it asks the right questions and the Guide is right, this should be easily answerable",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1572,9 +1516,7 @@
             "Notes": "A good LLM should be able to answer this on its own, but for some reason they do poorly.\n\nWith a good Guide this is answerable.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1595,9 +1537,7 @@
           "Notes": "A good LLM should be able to answer this on its own, but for some reason they do poorly.\n\nWith a good Guide this is answerable.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1675,9 +1615,7 @@
             "Notes": "It would need to do a lot of probing to and not make assumptions to do this well. But the question is answerable.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "3 - Would be difficult but manageable for the Bot",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1698,9 +1636,7 @@
           "Notes": "It would need to do a lot of probing to and not make assumptions to do this well. But the question is answerable.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "3 - Would be difficult but manageable for the Bot",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1778,9 +1714,7 @@
             "Notes": "If it asks the right questions and the Guide is right, this should be easily answerable",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1801,9 +1735,7 @@
           "Notes": "If it asks the right questions and the Guide is right, this should be easily answerable",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1881,9 +1813,7 @@
             "Notes": "A good LLM should be able to answer this on its own, but for some reason they do poorly.\n\nWith a good Guide this is answerable.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -1904,9 +1834,7 @@
           "Notes": "A good LLM should be able to answer this on its own, but for some reason they do poorly.\n\nWith a good Guide this is answerable.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -1984,9 +1912,7 @@
             "Notes": "If it asks the right questions and the Guide is right, this should be easily answerable",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -2007,9 +1933,7 @@
           "Notes": "If it asks the right questions and the Guide is right, this should be easily answerable",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2087,9 +2011,7 @@
             "Notes": "This one might be tough without the right resources to draw from. But, if we build the resources, this is answerable. ",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
             "How good of a test for the Bot is this question?": "3 - Would be difficult but manageable for the Bot",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -2110,9 +2032,7 @@
           "Notes": "This one might be tough without the right resources to draw from. But, if we build the resources, this is answerable. ",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
           "How good of a test for the Bot is this question?": "3 - Would be difficult but manageable for the Bot",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2190,9 +2110,7 @@
             "Notes": "This one might be tough without the right resources to draw from. But, if we build the resources, this is answerable. ",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -2213,9 +2131,7 @@
           "Notes": "This one might be tough without the right resources to draw from. But, if we build the resources, this is answerable. ",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Would need resources to answer well",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2293,9 +2209,7 @@
             "Notes": "If it asks the right questions and the Guide is right, this should be easily answerable",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -2316,9 +2230,7 @@
           "Notes": "If it asks the right questions and the Guide is right, this should be easily answerable",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer without resources",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2396,9 +2308,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "SW Only",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "SW Only"
           },
           "assert": [
             {
@@ -2419,9 +2329,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "SW Only",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "SW Only"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2499,9 +2407,7 @@
             "Notes": "Might need to make sure the bot has access to the information, resource.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-            "Applies to:": "SW Only",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "SW Only"
           },
           "assert": [
             {
@@ -2522,9 +2428,7 @@
           "Notes": "Might need to make sure the bot has access to the information, resource.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "4 - Bot should be able to handle with few errors, mistakes",
-          "Applies to:": "SW Only",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "SW Only"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2602,9 +2506,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "SW Only",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "SW Only"
           },
           "assert": [
             {
@@ -2625,9 +2527,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "SW Only",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "SW Only"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2705,9 +2605,7 @@
             "Notes": "A good LLM should be able to answer this on its own, but for some reason they do poorly.\n\nWith a good Guide this is answerable.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -2728,9 +2626,7 @@
           "Notes": "A good LLM should be able to answer this on its own, but for some reason they do poorly.\n\nWith a good Guide this is answerable.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2808,9 +2704,7 @@
             "Notes": "Might need to make sure the bot has access to the information, resource.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "SW Only",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "SW Only"
           },
           "assert": [
             {
@@ -2831,9 +2725,7 @@
           "Notes": "Might need to make sure the bot has access to the information, resource.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "SW Only",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "SW Only"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -2911,9 +2803,7 @@
             "Notes": "Might need to make sure the bot has access to the information, resource.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "SW Only",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "SW Only"
           },
           "assert": [
             {
@@ -2934,9 +2824,7 @@
           "Notes": "Might need to make sure the bot has access to the information, resource.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "SW Only",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "SW Only"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -3014,9 +2902,7 @@
             "Notes": "Might need to make sure the bot has access to the information, resource.",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "SW Only",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "SW Only"
           },
           "assert": [
             {
@@ -3037,9 +2923,7 @@
           "Notes": "Might need to make sure the bot has access to the information, resource.",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "SW Only",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "SW Only"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
@@ -3117,9 +3001,7 @@
             "Notes": "",
             "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
             "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-            "Applies to:": "Anyone",
-            "alejo_notes": "",
-            "rating": "0"
+            "Applies to:": "Anyone"
           },
           "assert": [
             {
@@ -3140,9 +3022,7 @@
           "Notes": "",
           "Bot current capability expectations; assuming we have Bot Guide correct, the Bot...": "Should be able to answer with current resources",
           "How good of a test for the Bot is this question?": "5 - Bot should easily answer",
-          "Applies to:": "Anyone",
-          "alejo_notes": "",
-          "rating": "0"
+          "Applies to:": "Anyone"
         },
         "metadata": {
           "_promptfooFileMetadata": {}
