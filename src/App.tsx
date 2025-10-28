@@ -232,8 +232,18 @@ function App() {
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Prompt</label>
             <Select value={selectedPrompt || undefined} onValueChange={(value) => {
+              // Remember current testIdx to maintain position
+              const currentTestId = currentResult?.testIdx;
               setSelectedPrompt(value);
-              setCurrentTestIdx(0);
+
+              // After state updates, find the same test in new filtered results
+              if (currentTestId !== undefined && data && selectedProvider) {
+                const newFilteredResults = data.results.results.filter(
+                  (r) => r.prompt?.label === value && r.provider?.label === selectedProvider
+                );
+                const newIdx = newFilteredResults.findIndex(r => r.testIdx === currentTestId);
+                setCurrentTestIdx(newIdx >= 0 ? newIdx : 0);
+              }
             }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select prompt" />
@@ -249,8 +259,18 @@ function App() {
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Model</label>
             <Select value={selectedProvider || undefined} onValueChange={(value) => {
+              // Remember current testIdx to maintain position
+              const currentTestId = currentResult?.testIdx;
               setSelectedProvider(value);
-              setCurrentTestIdx(0);
+
+              // After state updates, find the same test in new filtered results
+              if (currentTestId !== undefined && data && selectedPrompt) {
+                const newFilteredResults = data.results.results.filter(
+                  (r) => r.prompt?.label === selectedPrompt && r.provider?.label === value
+                );
+                const newIdx = newFilteredResults.findIndex(r => r.testIdx === currentTestId);
+                setCurrentTestIdx(newIdx >= 0 ? newIdx : 0);
+              }
             }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select model" />

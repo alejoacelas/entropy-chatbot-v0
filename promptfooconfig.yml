@@ -1,14 +1,18 @@
 description: "Entropy Chatbot Evaluation"
 
+outputPath: public/evals/results.json
+
 prompts:
-  - id: file://data/prompts/direct-v0.txt
+  - id: file://public/prompts/direct-v0.txt
     label: direct-v0
+  - id: file://public/prompts/clarify-web-v1.txt
+    label: clarify-web-v1
 
 providers:
   - id: 'anthropic:messages:claude-sonnet-4-5-20250929'
     label: 'Claude Sonnet 4 (Web Search + Fetch)'
-    prompts: [direct-v0]
-    transform: file://transform.py
+    prompts: [direct-v0, clarify-web-v1]
+    transform: file://transform.js
     config:
       max_tokens: 12000
       thinking:
@@ -17,14 +21,14 @@ providers:
       tools:
         - type: web_search_20250305
           name: web_search
-          max_uses: 3
+          max_uses: 10
         - type: web_fetch_20250910
           name: web_fetch
-          max_uses: 3
+          max_uses: 10
 
 # Load test cases from CSV file
 # CSV should have 'prompt' column for questions, other columns become metadata/context
-tests: file://data/questions/30-real-questions.csv
+tests: file://public/questions/30-real-questions.csv
 
 defaultTest:
   assert:

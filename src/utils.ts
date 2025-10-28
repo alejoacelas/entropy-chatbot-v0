@@ -2,7 +2,7 @@ import type { PromptfooResult, AnnotationsStore, Annotation } from './types';
 
 export async function loadPromptfooResults(): Promise<PromptfooResult | null> {
   try {
-    const response = await fetch('/data/evals/results.json');
+    const response = await fetch('/evals/results.json');
     if (!response.ok) {
       console.error('Failed to fetch results:', response.status, response.statusText);
       return null;
