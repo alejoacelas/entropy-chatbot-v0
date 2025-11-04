@@ -10,7 +10,6 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import {
-  loadPromptfooResults,
   loadAnnotations,
   saveAnnotations,
   getAnnotation,
@@ -19,6 +18,7 @@ import {
   exportAnnotationsToJSON,
   exportToCSV,
 } from './utils';
+import { listRuns, loadRun } from '@/api/evaluationApi';
 import type { PromptfooResult, AnnotationsStore } from './types';
 
 function App() {
@@ -27,6 +27,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [availableRuns, setAvailableRuns] = useState<string[]>([]);
+  const [selectedRun, setSelectedRun] = useState<string | null>(null);
   const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [currentTestIdx, setCurrentTestIdx] = useState(0);
@@ -34,43 +36,65 @@ function App() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Load available runs on mount
   useEffect(() => {
-    const loadData = async () => {
+    const loadAvailableRuns = async () => {
       try {
-        const promptfooData = await loadPromptfooResults();
-        if (!promptfooData) {
-          setError('No evaluation results found. Run promptfoo first.');
-          setLoading(false);
-          return;
-        }
+        const runs = await listRuns();
+        setAvailableRuns(runs);
 
-        setData(promptfooData);
+        if (runs.length > 0) {
+          setSelectedRun(runs[0]);
+        } else {
+          setError('No saved runs found. Run an evaluation first.');
+          setLoading(false);
+        }
+      } catch (err) {
+        setError(`Failed to load runs: ${err}`);
+        setLoading(false);
+      }
+    };
+
+    loadAvailableRuns();
+  }, []);
+
+  // Load selected run data
+  useEffect(() => {
+    if (!selectedRun) return;
+
+    const loadRunData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const runData = await loadRun(selectedRun);
+        setData(runData);
 
         const annots = await loadAnnotations();
         setAnnotations(annots);
 
         const prompts = Array.from(
           new Set(
-            promptfooData.results.results.map((r) => r.prompt?.label || 'unknown')
+            runData.results.results.map((r: any) => r.prompt?.label || 'unknown')
           )
-        ).sort();
+        ).sort() as string[];
         const providers = Array.from(
           new Set(
-            promptfooData.results.results.map((r) => r.provider?.label || 'unknown')
+            runData.results.results.map((r: any) => r.provider?.label || 'unknown')
           )
-        ).sort();
+        ).sort() as string[];
 
         if (prompts.length > 0) setSelectedPrompt(prompts[0]);
         if (providers.length > 0) setSelectedProvider(providers[0]);
       } catch (err) {
-        setError(`Failed to load data: ${err}`);
+        setError(`Failed to load run data: ${err}`);
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
-  }, []);
+    loadRunData();
+  }, [selectedRun]);
 
   const prompts = data
     ? Array.from(
@@ -228,6 +252,23 @@ function App() {
       <div className="w-90 border-r bg-card p-6 flex flex-col gap-6 overflow-y-auto overflow-x-hidden">
         <div className="flex flex-col gap-4">
           <h3 className="text-lg font-semibold">🎯 Filters</h3>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Run</label>
+            <Select value={selectedRun || undefined} onValueChange={(value) => {
+              setSelectedRun(value);
+              setCurrentTestIdx(0);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select run" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableRuns.map((run) => (
+                  <SelectItem key={run} value={run}>{run}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">Prompt</label>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,9 +10,12 @@ import ReactMarkdown from 'react-markdown';
 import { runEvaluation, type EvaluationResult } from '@/api/evaluationApi';
 import { Upload, Play, CheckCircle, XCircle, Clock } from 'lucide-react';
 
+const HARDCODED_MODEL = 'claude-sonnet-4-5-20250929';
+const STORAGE_KEY_SYSTEM_PROMPT = 'lastSystemPrompt';
+
 export function EvaluationRunner() {
   const [file, setFile] = useState<File | null>(null);
-  const [model, setModel] = useState('claude-3-5-sonnet-20241022');
+  const [runName, setRunName] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<EvaluationResult[]>([]);
@@ -20,6 +23,14 @@ export function EvaluationRunner() {
   const [summary, setSummary] = useState<{ total: number; cached: number; errors: number } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load last system prompt from localStorage on mount
+  useEffect(() => {
+    const savedPrompt = localStorage.getItem(STORAGE_KEY_SYSTEM_PROMPT);
+    if (savedPrompt) {
+      setSystemPrompt(savedPrompt);
+    }
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -39,17 +50,28 @@ export function EvaluationRunner() {
       return;
     }
 
+    if (!runName.trim()) {
+      setError('Please provide a name for this evaluation run');
+      return;
+    }
+
     setIsRunning(true);
     setError(null);
     setResults([]);
     setSummary(null);
 
     try {
+      // Save system prompt to localStorage for future use
+      if (systemPrompt.trim()) {
+        localStorage.setItem(STORAGE_KEY_SYSTEM_PROMPT, systemPrompt);
+      }
+
       const response = await runEvaluation(
         file,
         null,
-        model,
-        systemPrompt || undefined
+        HARDCODED_MODEL,
+        systemPrompt || undefined,
+        runName.trim()
       );
 
       setResults(response.results);
@@ -143,19 +165,22 @@ export function EvaluationRunner() {
             </p>
           </div>
 
-          {/* Model Selection */}
+          {/* Run Name */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Model
+              Run Name
             </label>
             <input
               type="text"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
+              value={runName}
+              onChange={(e) => setRunName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="claude-3-5-sonnet-20241022"
+              placeholder="e.g., customer-support-v1"
               disabled={isRunning}
             />
+            <p className="text-xs text-muted-foreground mt-2">
+              Give this evaluation run a unique name
+            </p>
           </div>
 
           {/* System Prompt (Optional) */}
@@ -178,7 +203,7 @@ export function EvaluationRunner() {
           {/* Run Button */}
           <Button
             onClick={handleRunEvaluation}
-            disabled={!file || isRunning}
+            disabled={!file || !runName.trim() || isRunning}
             className="w-full"
           >
             <Play className="mr-2 h-4 w-4" />

@@ -3,3 +3,5 @@ dist/
 .env
 cache/*.json
 !cache/.gitkeep
+runs/*.json
+!runs/.gitkeep
