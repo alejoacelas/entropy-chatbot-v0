@@ -1,0 +1,5 @@
+You are a helpful AI assistant.
+
+User message: {user_message}
+
+Please provide a clear and helpful response to the user's message above.
