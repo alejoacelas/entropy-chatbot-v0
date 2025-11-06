@@ -57,7 +57,23 @@ export async function listDatasets(): Promise<string[]> {
   try {
     const files = await fs.readdir(DATASETS_DIR);
     const jsonFiles = files.filter(f => f.endsWith('.json'));
-    return jsonFiles.map(f => f.replace('.json', '').replace(/_/g, ' '));
+
+    // Read each file to get the original name
+    const datasets = await Promise.all(
+      jsonFiles.map(async (file) => {
+        try {
+          const filePath = path.join(DATASETS_DIR, file);
+          const data = await fs.readFile(filePath, 'utf-8');
+          const parsed: SavedDataset = JSON.parse(data);
+          return parsed.name;
+        } catch {
+          // If file is corrupt, return filename without extension
+          return file.replace('.json', '').replace(/_/g, ' ');
+        }
+      })
+    );
+
+    return datasets.sort();
   } catch (error) {
     return [];
   }

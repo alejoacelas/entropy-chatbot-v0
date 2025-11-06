@@ -63,7 +63,23 @@ export async function listRuns(): Promise<string[]> {
   try {
     const files = await fs.readdir(RUNS_DIR);
     const jsonFiles = files.filter(f => f.endsWith('.json'));
-    return jsonFiles.map(f => f.replace('.json', '').replace(/_/g, ' '));
+
+    // Read each file to get the original name
+    const runs = await Promise.all(
+      jsonFiles.map(async (file) => {
+        try {
+          const filePath = path.join(RUNS_DIR, file);
+          const data = await fs.readFile(filePath, 'utf-8');
+          const parsed: SavedRun = JSON.parse(data);
+          return parsed.runName;
+        } catch {
+          // If file is corrupt, return filename without extension
+          return file.replace('.json', '').replace(/_/g, ' ');
+        }
+      })
+    );
+
+    return runs.sort();
   } catch (error) {
     return [];
   }

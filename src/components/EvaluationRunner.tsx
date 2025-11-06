@@ -1,23 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import ReactMarkdown from 'react-markdown';
-import { runEvaluation, listDatasets, type EvaluationResult } from '@/api/evaluationApi';
+import { runEvaluation, listDatasets, listPrompts, loadPrompt, type EvaluationResult } from '@/api/evaluationApi';
 import { Upload, Play, CheckCircle, XCircle, Clock } from 'lucide-react';
-
-const HARDCODED_MODEL = 'claude-sonnet-4-5-20250929';
-const STORAGE_KEY_PROMPTS = 'savedSystemPrompts';
-
-interface SavedPrompt {
-  name: string;
-  content: string;
-}
+import { DEFAULT_MODEL } from '@/constants';
 
 export function EvaluationRunner() {
   const [file, setFile] = useState<File | null>(null);
@@ -25,10 +18,8 @@ export function EvaluationRunner() {
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [availableDatasets, setAvailableDatasets] = useState<string[]>([]);
   const [runName, setRunName] = useState('');
-  const [systemPrompt, setSystemPrompt] = useState('');
-  const [promptName, setPromptName] = useState('');
-  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
-  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
+  const [availablePrompts, setAvailablePrompts] = useState<string[]>([]);
+  const [selectedPrompts, setSelectedPrompts] = useState<Set<string>>(new Set());
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<EvaluationResult[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -36,21 +27,22 @@ export function EvaluationRunner() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load saved prompts from localStorage on mount
+  // Load available prompts from backend on mount
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_PROMPTS);
-    if (saved) {
+    const loadPromptsData = async () => {
       try {
-        setSavedPrompts(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load saved prompts:', e);
+        const promptNames = await listPrompts();
+        setAvailablePrompts(promptNames);
+      } catch (err) {
+        console.error('Failed to load available prompts:', err);
       }
-    }
+    };
+    loadPromptsData();
   }, []);
 
   // Load available datasets on mount
   useEffect(() => {
-    const loadDatasets = async () => {
+    const loadDatasetsData = async () => {
       try {
         const datasets = await listDatasets();
         setAvailableDatasets(datasets);
@@ -58,7 +50,7 @@ export function EvaluationRunner() {
         console.error('Failed to load datasets:', err);
       }
     };
-    loadDatasets();
+    loadDatasetsData();
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,30 +71,14 @@ export function EvaluationRunner() {
     setFile(null); // Clear file when dataset is selected
   };
 
-  const saveCurrentPrompt = () => {
-    if (!promptName.trim() || !systemPrompt.trim()) {
-      setError('Please provide both a prompt name and prompt content');
-      return;
+  const handlePromptToggle = (promptName: string) => {
+    const newSelected = new Set(selectedPrompts);
+    if (newSelected.has(promptName)) {
+      newSelected.delete(promptName);
+    } else {
+      newSelected.add(promptName);
     }
-
-    const newPrompt: SavedPrompt = {
-      name: promptName.trim(),
-      content: systemPrompt.trim(),
-    };
-
-    const updated = [...savedPrompts.filter(p => p.name !== newPrompt.name), newPrompt];
-    setSavedPrompts(updated);
-    localStorage.setItem(STORAGE_KEY_PROMPTS, JSON.stringify(updated));
-    setPromptName('');
-    setError(null);
-  };
-
-  const handlePromptSelect = (promptName: string) => {
-    const prompt = savedPrompts.find(p => p.name === promptName);
-    if (prompt) {
-      setSystemPrompt(prompt.content);
-      setSelectedPrompt(promptName);
-    }
+    setSelectedPrompts(newSelected);
   };
 
   const handleRunEvaluation = async () => {
@@ -121,51 +97,67 @@ export function EvaluationRunner() {
       return;
     }
 
-    // Check if using a custom system prompt
-    if (systemPrompt.trim()) {
-      // Check if this is a new prompt (not already saved)
-      const isPromptSaved = savedPrompts.some(p => p.content === systemPrompt.trim());
-
-      if (!isPromptSaved && !promptName.trim()) {
-        setError('Please provide a name for this system prompt before running the evaluation');
-        return;
-      }
-
-      // Automatically save the prompt if it's new
-      if (!isPromptSaved && promptName.trim()) {
-        const newPrompt: SavedPrompt = {
-          name: promptName.trim(),
-          content: systemPrompt.trim(),
-        };
-        const updated = [...savedPrompts.filter(p => p.name !== newPrompt.name), newPrompt];
-        setSavedPrompts(updated);
-        localStorage.setItem(STORAGE_KEY_PROMPTS, JSON.stringify(updated));
-        setSelectedPrompt(newPrompt.name);
-        setPromptName(''); // Clear the name field after saving
-      }
-    }
-
     setIsRunning(true);
     setError(null);
     setResults([]);
     setSummary(null);
 
     try {
-      const response = await runEvaluation(
-        file,
-        null,
-        HARDCODED_MODEL,
-        systemPrompt || undefined,
-        runName.trim(),
-        file ? datasetName.trim() : selectedDataset || undefined
-      );
+      // If prompts are selected, run evaluation for each prompt
+      if (selectedPrompts.size > 0) {
+        const allResults: EvaluationResult[] = [];
+        let totalCached = 0;
+        let totalErrors = 0;
 
-      setResults(response.results);
-      setSummary({
-        total: response.total,
-        cached: response.cached,
-        errors: response.errors,
-      });
+        for (const promptName of selectedPrompts) {
+          try {
+            // Load the prompt content
+            const promptData = await loadPrompt(promptName);
+            const systemPrompt = promptData.content;
+
+            // Run evaluation with this prompt
+            const response = await runEvaluation(
+              file,
+              null,
+              DEFAULT_MODEL,
+              systemPrompt,
+              `${runName.trim()}-${promptName}`,
+              file ? datasetName.trim() : selectedDataset || undefined
+            );
+
+            allResults.push(...response.results);
+            totalCached += response.cached;
+            totalErrors += response.errors;
+          } catch (err) {
+            console.error(`Failed to run evaluation with prompt ${promptName}:`, err);
+            totalErrors++;
+          }
+        }
+
+        setResults(allResults);
+        setSummary({
+          total: allResults.length,
+          cached: totalCached,
+          errors: totalErrors,
+        });
+      } else {
+        // No prompt selected, run with default
+        const response = await runEvaluation(
+          file,
+          null,
+          DEFAULT_MODEL,
+          undefined,
+          runName.trim(),
+          file ? datasetName.trim() : selectedDataset || undefined
+        );
+
+        setResults(response.results);
+        setSummary({
+          total: response.total,
+          cached: response.cached,
+          errors: response.errors,
+        });
+      }
 
       // Reload datasets list if we just saved a new one
       if (file && datasetName.trim()) {
@@ -225,6 +217,24 @@ export function EvaluationRunner() {
           <CardTitle>Run AI Evaluation</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Run Name - First Field */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Run Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={runName}
+              onChange={(e) => setRunName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="e.g., customer-support-v1"
+              disabled={isRunning}
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Give this evaluation run a unique name
+            </p>
+          </div>
+
           {/* Dataset Selection or File Upload */}
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -286,7 +296,7 @@ export function EvaluationRunner() {
           {file && (
             <div>
               <label className="block text-sm font-medium mb-2">
-                Dataset Name
+                Dataset Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -302,102 +312,35 @@ export function EvaluationRunner() {
             </div>
           )}
 
-          {/* Run Name */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Run Name
-            </label>
-            <input
-              type="text"
-              value={runName}
-              onChange={(e) => setRunName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="e.g., customer-support-v1"
-              disabled={isRunning}
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Give this evaluation run a unique name
-            </p>
-          </div>
-
-          {/* System Prompt (Optional) */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              System Prompt Template (Optional)
-            </label>
-
-            {/* Prompt Selection */}
-            {savedPrompts.length > 0 && (
-              <div className="mb-3">
-                <Select
-                  value={selectedPrompt || undefined}
-                  onValueChange={handlePromptSelect}
-                  disabled={isRunning}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Load a saved prompt" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {savedPrompts.map((prompt) => (
-                      <SelectItem key={prompt.name} value={prompt.name}>
-                        {prompt.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {/* Prompt Selection (Multi-select) */}
+          {availablePrompts.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Select Prompts (Optional)
+              </label>
+              <div className="border border-gray-300 rounded-md p-4 space-y-3 max-h-[300px] overflow-y-auto">
+                {availablePrompts.map((promptName) => (
+                  <div key={promptName} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`prompt-${promptName}`}
+                      checked={selectedPrompts.has(promptName)}
+                      onCheckedChange={() => handlePromptToggle(promptName)}
+                      disabled={isRunning}
+                    />
+                    <label
+                      htmlFor={`prompt-${promptName}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {promptName}
+                    </label>
+                  </div>
+                ))}
               </div>
-            )}
-
-            <Textarea
-              value={systemPrompt}
-              onChange={(e) => {
-                setSystemPrompt(e.target.value);
-                // Clear selected prompt when user modifies the content
-                if (selectedPrompt) {
-                  const currentPrompt = savedPrompts.find(p => p.name === selectedPrompt);
-                  if (currentPrompt && currentPrompt.content !== e.target.value) {
-                    setSelectedPrompt(null);
-                  }
-                }
-              }}
-              placeholder="Leave empty to use default. Use {user_message} as placeholder."
-              className="min-h-[120px] max-h-[300px]"
-              disabled={isRunning}
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Use {'{user_message}'} as a placeholder for each prompt
-            </p>
-
-            {/* Prompt Name - Required for new prompts */}
-            {systemPrompt.trim() && !savedPrompts.some(p => p.content === systemPrompt.trim()) && (
-              <div className="mt-3">
-                <label className="block text-sm font-medium mb-2">
-                  Prompt Name <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={promptName}
-                    onChange={(e) => setPromptName(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    placeholder="Required: Give this prompt a name"
-                    disabled={isRunning}
-                  />
-                  <Button
-                    onClick={saveCurrentPrompt}
-                    variant="outline"
-                    size="sm"
-                    disabled={isRunning || !promptName.trim() || !systemPrompt.trim()}
-                  >
-                    Save Now
-                  </Button>
-                </div>
-                <p className="text-xs text-red-500 mt-1">
-                  This prompt will be automatically saved when you run the evaluation
-                </p>
-              </div>
-            )}
-          </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Select one or more prompts to run evaluations. Leave empty to use default.
+              </p>
+            </div>
+          )}
 
           {/* Run Button */}
           <Button

@@ -1,6 +1,6 @@
 import { parse } from 'csv-parse/sync';
 
-export interface CsvRow {
+interface CsvRow {
   [key: string]: string;
 }
 

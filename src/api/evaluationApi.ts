@@ -24,13 +24,33 @@ export async function runEvaluation(
   runName?: string,
   datasetName?: string
 ): Promise<EvaluationResponse> {
-  const formData = new FormData();
-
   if (file) {
+    const formData = new FormData();
     formData.append('file', file);
     if (datasetName) {
       formData.append('datasetName', datasetName);
     }
+    if (model) {
+      formData.append('model', model);
+    }
+    if (systemPrompt) {
+      formData.append('systemPrompt', systemPrompt);
+    }
+    if (runName) {
+      formData.append('runName', runName);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
   } else if (datasetName) {
     // Load existing dataset
     const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
@@ -76,39 +96,6 @@ export async function runEvaluation(
   } else {
     throw new Error('Either file, dataset, or prompts array must be provided');
   }
-
-  // Add optional parameters to FormData
-  if (model) {
-    formData.append('model', model);
-  }
-  if (systemPrompt) {
-    formData.append('systemPrompt', systemPrompt);
-  }
-  if (runName) {
-    formData.append('runName', runName);
-  }
-
-  const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || `HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-
-export async function checkHealth(): Promise<{ status: string; timestamp: string }> {
-  const response = await fetch(`${API_BASE_URL}/health`);
-
-  if (!response.ok) {
-    throw new Error(`Health check failed: HTTP ${response.status}`);
-  }
-
-  return response.json();
 }
 
 export async function listRuns(): Promise<string[]> {
@@ -151,4 +138,50 @@ export async function loadDataset(datasetName: string): Promise<any> {
   }
 
   return response.json();
+}
+
+export async function listPrompts(): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/api/prompts`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to list prompts: HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.prompts || [];
+}
+
+export async function loadPrompt(promptName: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/prompts/${encodeURIComponent(promptName)}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to load prompt: HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function savePrompt(name: string, content: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/prompts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, content }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `HTTP ${response.status}`);
+  }
+}
+
+export async function deletePrompt(promptName: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/prompts/${encodeURIComponent(promptName)}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete prompt: HTTP ${response.status}`);
+  }
 }

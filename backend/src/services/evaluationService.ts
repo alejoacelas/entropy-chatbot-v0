@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DEFAULT_SYSTEM_PROMPT_PATH = path.join(__dirname, '../../prompts/system.txt');
-const DEFAULT_MODEL = 'claude-3-5-sonnet-20241022';
+const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
 
 /**
  * Load system prompt template from file

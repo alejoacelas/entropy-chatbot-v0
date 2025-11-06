@@ -47,12 +47,16 @@ npm start            # Run compiled production build from dist/
 - `utils/cache.ts` - File-based response cache with SHA-256 keys (cache key = hash of model + systemPrompt + userMessage)
 - `utils/csvParser.ts` - CSV parsing to extract prompts
 - `utils/runStorage.ts` - Saves/loads evaluation runs, converts to Promptfoo format
+- `utils/datasetStorage.ts` - Saves/loads datasets (CSV prompts)
+- `utils/promptStorage.ts` - Saves/loads system prompts
 
 **Key Features:**
 - File-based caching in `backend/cache/` to avoid redundant API calls
 - Sequential prompt processing to respect rate limits
 - System prompt templates with `{user_message}` placeholder in `backend/prompts/system.txt`
-- Saved runs stored as JSON for review
+- Saved runs stored as JSON in `backend/runs/` for review
+- Saved datasets stored as JSON in `backend/datasets/` for reuse
+- Saved system prompts stored as JSON in `backend/saved-prompts/` for reuse
 
 ### Frontend Structure (`src/`)
 
@@ -85,6 +89,24 @@ npm start            # Run compiled production build from dist/
 **GET /api/runs/:name**
 - Returns specific run in Promptfoo-compatible format
 
+**GET /api/datasets**
+- Lists all saved dataset names
+
+**GET /api/datasets/:name**
+- Returns specific dataset with prompts
+
+**GET /api/prompts**
+- Lists all saved system prompt names
+
+**GET /api/prompts/:name**
+- Returns specific system prompt with content
+
+**POST /api/prompts**
+- Saves a new system prompt (body: `{ name, content }`)
+
+**DELETE /api/prompts/:name**
+- Deletes a saved system prompt
+
 **GET /health**
 - Health check endpoint
 
@@ -102,10 +124,11 @@ npm start            # Run compiled production build from dist/
 - Cache keys are deterministic SHA-256 hashes for consistent caching
 - Error handling includes retry logic for rate limits, graceful degradation for cache misses
 - System prompts are templates where `{user_message}` gets replaced with each prompt
+- Sanitization fix: `listRuns()`, `listDatasets()`, and `listPrompts()` read original names from JSON files instead of reversing sanitization
 
 ### Frontend Patterns
-- Model selection is hardcoded to Claude Sonnet 4.5 in `EvaluationRunner.tsx`
-- System prompts are saved to localStorage for reuse across sessions
+- Model selection is hardcoded to Claude Sonnet 4.5 (imported from `@/constants`)
+- System prompts are saved to backend storage for persistence across browsers/users
 - React 19 with functional components and hooks
 - shadcn/ui components follow Radix UI patterns
 

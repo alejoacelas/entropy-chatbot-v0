@@ -4,9 +4,10 @@ import { runEvaluation } from '../services/evaluationService.js';
 import { parsePromptsFromCsv } from '../utils/csvParser.js';
 import { saveRun, listRuns, loadRun, convertToPromptfooFormat } from '../utils/runStorage.js';
 import { saveDataset, listDatasets, loadDataset } from '../utils/datasetStorage.js';
-import { EvaluationRequest } from '../types.js';
+import { savePrompt, listPrompts, loadPrompt, deletePrompt } from '../utils/promptStorage.js';
 
 const router = express.Router();
+const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
 
 // Configure multer for file uploads (in-memory storage)
 const upload = multer({
@@ -84,7 +85,7 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
 
     // Save run if runName is provided
     if (runName && runName.trim()) {
-      const actualModel = model || 'claude-sonnet-4-5-20250929';
+      const actualModel = model || DEFAULT_MODEL;
       await saveRun(runName.trim(), actualModel, systemPrompt || '', results);
       console.log(`Saved run: ${runName}`);
     }
@@ -192,6 +193,117 @@ router.get('/datasets/:name', async (req, res) => {
     res.json(dataset);
   } catch (error) {
     console.error('Error loading dataset:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/prompts
+ *
+ * Returns: List of all saved prompt names
+ */
+router.get('/prompts', async (req, res) => {
+  try {
+    const prompts = await listPrompts();
+    res.json({
+      success: true,
+      prompts,
+    });
+  } catch (error) {
+    console.error('Error listing prompts:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/prompts/:name
+ *
+ * Returns: Specific prompt with content
+ */
+router.get('/prompts/:name', async (req, res) => {
+  try {
+    const promptName = req.params.name;
+    const prompt = await loadPrompt(promptName);
+
+    if (!prompt) {
+      return res.status(404).json({
+        error: `Prompt not found: ${promptName}`,
+      });
+    }
+
+    res.json(prompt);
+  } catch (error) {
+    console.error('Error loading prompt:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/prompts
+ *
+ * Saves a new system prompt
+ * Body: { name: string, content: string }
+ */
+router.post('/prompts', async (req, res) => {
+  try {
+    const { name, content } = req.body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({
+        error: 'Prompt name is required',
+      });
+    }
+
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({
+        error: 'Prompt content is required',
+      });
+    }
+
+    await savePrompt(name.trim(), content.trim());
+    console.log(`Saved prompt: ${name}`);
+
+    res.json({
+      success: true,
+      message: `Prompt "${name}" saved successfully`,
+    });
+  } catch (error) {
+    console.error('Error saving prompt:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * DELETE /api/prompts/:name
+ *
+ * Deletes a saved prompt
+ */
+router.delete('/prompts/:name', async (req, res) => {
+  try {
+    const promptName = req.params.name;
+    const success = await deletePrompt(promptName);
+
+    if (!success) {
+      return res.status(404).json({
+        error: `Prompt not found: ${promptName}`,
+      });
+    }
+
+    console.log(`Deleted prompt: ${promptName}`);
+    res.json({
+      success: true,
+      message: `Prompt "${promptName}" deleted successfully`,
+    });
+  } catch (error) {
+    console.error('Error deleting prompt:', error);
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Unknown error',
     });

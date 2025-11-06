@@ -17,9 +17,9 @@ import {
   truncateText,
   exportAnnotationsToJSON,
   exportToCSV,
-} from './utils';
+} from '@/utils';
 import { listRuns, loadRun } from '@/api/evaluationApi';
-import type { PromptfooResult, AnnotationsStore } from './types';
+import type { PromptfooResult, AnnotationsStore } from '@/types';
 
 function App() {
   const [data, setData] = useState<PromptfooResult | null>(null);
@@ -292,33 +292,6 @@ function App() {
               <SelectContent>
                 {prompts.map((p) => (
                   <SelectItem key={p} value={p}>{p.split(' ')[0]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Model</label>
-            <Select value={selectedProvider || undefined} onValueChange={(value) => {
-              // Remember current testIdx to maintain position
-              const currentTestId = currentResult?.testIdx;
-              setSelectedProvider(value);
-
-              // After state updates, find the same test in new filtered results
-              if (currentTestId !== undefined && data && selectedPrompt) {
-                const newFilteredResults = data.results.results.filter(
-                  (r) => r.prompt?.label === selectedPrompt && r.provider?.label === value
-                );
-                const newIdx = newFilteredResults.findIndex(r => r.testIdx === currentTestId);
-                setCurrentTestIdx(newIdx >= 0 ? newIdx : 0);
-              }
-            }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select model" />
-              </SelectTrigger>
-              <SelectContent>
-                {providers.map((p) => (
-                  <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
