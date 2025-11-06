@@ -21,12 +21,37 @@ export async function runEvaluation(
   prompts: string[] | null,
   model?: string,
   systemPrompt?: string,
-  runName?: string
+  runName?: string,
+  datasetName?: string
 ): Promise<EvaluationResponse> {
   const formData = new FormData();
 
   if (file) {
     formData.append('file', file);
+    if (datasetName) {
+      formData.append('datasetName', datasetName);
+    }
+  } else if (datasetName) {
+    // Load existing dataset
+    const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        datasetName,
+        model,
+        systemPrompt,
+        runName,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
   } else if (prompts && prompts.length > 0) {
     // Send as JSON instead of FormData
     const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
@@ -49,7 +74,7 @@ export async function runEvaluation(
 
     return response.json();
   } else {
-    throw new Error('Either file or prompts array must be provided');
+    throw new Error('Either file, dataset, or prompts array must be provided');
   }
 
   // Add optional parameters to FormData
@@ -102,6 +127,27 @@ export async function loadRun(runName: string): Promise<any> {
 
   if (!response.ok) {
     throw new Error(`Failed to load run: HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function listDatasets(): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/api/datasets`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to list datasets: HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.datasets || [];
+}
+
+export async function loadDataset(datasetName: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/datasets/${encodeURIComponent(datasetName)}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to load dataset: HTTP ${response.status}`);
   }
 
   return response.json();

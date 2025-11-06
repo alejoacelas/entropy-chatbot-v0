@@ -6,17 +6,29 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReactMarkdown from 'react-markdown';
-import { runEvaluation, type EvaluationResult } from '@/api/evaluationApi';
+import { runEvaluation, listDatasets, type EvaluationResult } from '@/api/evaluationApi';
 import { Upload, Play, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 const HARDCODED_MODEL = 'claude-sonnet-4-5-20250929';
-const STORAGE_KEY_SYSTEM_PROMPT = 'lastSystemPrompt';
+const STORAGE_KEY_PROMPTS = 'savedSystemPrompts';
+
+interface SavedPrompt {
+  name: string;
+  content: string;
+}
 
 export function EvaluationRunner() {
   const [file, setFile] = useState<File | null>(null);
+  const [datasetName, setDatasetName] = useState('');
+  const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
+  const [availableDatasets, setAvailableDatasets] = useState<string[]>([]);
   const [runName, setRunName] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('');
+  const [promptName, setPromptName] = useState('');
+  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
+  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<EvaluationResult[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -24,12 +36,29 @@ export function EvaluationRunner() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load last system prompt from localStorage on mount
+  // Load saved prompts from localStorage on mount
   useEffect(() => {
-    const savedPrompt = localStorage.getItem(STORAGE_KEY_SYSTEM_PROMPT);
-    if (savedPrompt) {
-      setSystemPrompt(savedPrompt);
+    const saved = localStorage.getItem(STORAGE_KEY_PROMPTS);
+    if (saved) {
+      try {
+        setSavedPrompts(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load saved prompts:', e);
+      }
     }
+  }, []);
+
+  // Load available datasets on mount
+  useEffect(() => {
+    const loadDatasets = async () => {
+      try {
+        const datasets = await listDatasets();
+        setAvailableDatasets(datasets);
+      } catch (err) {
+        console.error('Failed to load datasets:', err);
+      }
+    };
+    loadDatasets();
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,13 +69,45 @@ export function EvaluationRunner() {
         return;
       }
       setFile(selectedFile);
+      setSelectedDataset(null); // Clear dataset selection when file is selected
       setError(null);
     }
   };
 
+  const handleDatasetSelect = (dataset: string) => {
+    setSelectedDataset(dataset);
+    setFile(null); // Clear file when dataset is selected
+  };
+
+  const saveCurrentPrompt = () => {
+    if (!promptName.trim() || !systemPrompt.trim()) {
+      setError('Please provide both a prompt name and prompt content');
+      return;
+    }
+
+    const newPrompt: SavedPrompt = {
+      name: promptName.trim(),
+      content: systemPrompt.trim(),
+    };
+
+    const updated = [...savedPrompts.filter(p => p.name !== newPrompt.name), newPrompt];
+    setSavedPrompts(updated);
+    localStorage.setItem(STORAGE_KEY_PROMPTS, JSON.stringify(updated));
+    setPromptName('');
+    setError(null);
+  };
+
+  const handlePromptSelect = (promptName: string) => {
+    const prompt = savedPrompts.find(p => p.name === promptName);
+    if (prompt) {
+      setSystemPrompt(prompt.content);
+      setSelectedPrompt(promptName);
+    }
+  };
+
   const handleRunEvaluation = async () => {
-    if (!file) {
-      setError('Please upload a CSV file');
+    if (!file && !selectedDataset) {
+      setError('Please upload a CSV file or select a dataset');
       return;
     }
 
@@ -55,23 +116,48 @@ export function EvaluationRunner() {
       return;
     }
 
+    if (file && !datasetName.trim()) {
+      setError('Please provide a name for this dataset');
+      return;
+    }
+
+    // Check if using a custom system prompt
+    if (systemPrompt.trim()) {
+      // Check if this is a new prompt (not already saved)
+      const isPromptSaved = savedPrompts.some(p => p.content === systemPrompt.trim());
+
+      if (!isPromptSaved && !promptName.trim()) {
+        setError('Please provide a name for this system prompt before running the evaluation');
+        return;
+      }
+
+      // Automatically save the prompt if it's new
+      if (!isPromptSaved && promptName.trim()) {
+        const newPrompt: SavedPrompt = {
+          name: promptName.trim(),
+          content: systemPrompt.trim(),
+        };
+        const updated = [...savedPrompts.filter(p => p.name !== newPrompt.name), newPrompt];
+        setSavedPrompts(updated);
+        localStorage.setItem(STORAGE_KEY_PROMPTS, JSON.stringify(updated));
+        setSelectedPrompt(newPrompt.name);
+        setPromptName(''); // Clear the name field after saving
+      }
+    }
+
     setIsRunning(true);
     setError(null);
     setResults([]);
     setSummary(null);
 
     try {
-      // Save system prompt to localStorage for future use
-      if (systemPrompt.trim()) {
-        localStorage.setItem(STORAGE_KEY_SYSTEM_PROMPT, systemPrompt);
-      }
-
       const response = await runEvaluation(
         file,
         null,
         HARDCODED_MODEL,
         systemPrompt || undefined,
-        runName.trim()
+        runName.trim(),
+        file ? datasetName.trim() : selectedDataset || undefined
       );
 
       setResults(response.results);
@@ -80,6 +166,12 @@ export function EvaluationRunner() {
         cached: response.cached,
         errors: response.errors,
       });
+
+      // Reload datasets list if we just saved a new one
+      if (file && datasetName.trim()) {
+        const datasets = await listDatasets();
+        setAvailableDatasets(datasets);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
@@ -133,37 +225,82 @@ export function EvaluationRunner() {
           <CardTitle>Run AI Evaluation</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* File Upload */}
+          {/* Dataset Selection or File Upload */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Upload CSV File
+              Select Dataset or Upload CSV
             </label>
-            <div className="flex items-center gap-4">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                variant="outline"
-                disabled={isRunning}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Choose CSV File
-              </Button>
-              {file && (
-                <span className="text-sm text-muted-foreground">
-                  {file.name}
-                </span>
-              )}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-4">
+                <Select
+                  value={selectedDataset || undefined}
+                  onValueChange={handleDatasetSelect}
+                  disabled={isRunning || !!file}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select existing dataset" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDatasets.map((dataset) => (
+                      <SelectItem key={dataset} value={dataset}>
+                        {dataset}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">or</span>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  disabled={isRunning || !!selectedDataset}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Choose CSV File
+                </Button>
+                {file && (
+                  <span className="text-sm text-muted-foreground">
+                    {file.name}
+                  </span>
+                )}
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               CSV must have a "prompt" column
             </p>
           </div>
+
+          {/* Dataset Name (only shown when uploading new file) */}
+          {file && (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Dataset Name
+              </label>
+              <input
+                type="text"
+                value={datasetName}
+                onChange={(e) => setDatasetName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., customer-support-questions"
+                disabled={isRunning}
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Give this dataset a name to reuse it later
+              </p>
+            </div>
+          )}
 
           {/* Run Name */}
           <div>
@@ -188,22 +325,84 @@ export function EvaluationRunner() {
             <label className="block text-sm font-medium mb-2">
               System Prompt Template (Optional)
             </label>
+
+            {/* Prompt Selection */}
+            {savedPrompts.length > 0 && (
+              <div className="mb-3">
+                <Select
+                  value={selectedPrompt || undefined}
+                  onValueChange={handlePromptSelect}
+                  disabled={isRunning}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Load a saved prompt" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {savedPrompts.map((prompt) => (
+                      <SelectItem key={prompt.name} value={prompt.name}>
+                        {prompt.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <Textarea
               value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
+              onChange={(e) => {
+                setSystemPrompt(e.target.value);
+                // Clear selected prompt when user modifies the content
+                if (selectedPrompt) {
+                  const currentPrompt = savedPrompts.find(p => p.name === selectedPrompt);
+                  if (currentPrompt && currentPrompt.content !== e.target.value) {
+                    setSelectedPrompt(null);
+                  }
+                }
+              }}
               placeholder="Leave empty to use default. Use {user_message} as placeholder."
-              rows={4}
+              className="min-h-[120px] max-h-[300px]"
               disabled={isRunning}
             />
             <p className="text-xs text-muted-foreground mt-2">
               Use {'{user_message}'} as a placeholder for each prompt
             </p>
+
+            {/* Prompt Name - Required for new prompts */}
+            {systemPrompt.trim() && !savedPrompts.some(p => p.content === systemPrompt.trim()) && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium mb-2">
+                  Prompt Name <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={promptName}
+                    onChange={(e) => setPromptName(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    placeholder="Required: Give this prompt a name"
+                    disabled={isRunning}
+                  />
+                  <Button
+                    onClick={saveCurrentPrompt}
+                    variant="outline"
+                    size="sm"
+                    disabled={isRunning || !promptName.trim() || !systemPrompt.trim()}
+                  >
+                    Save Now
+                  </Button>
+                </div>
+                <p className="text-xs text-red-500 mt-1">
+                  This prompt will be automatically saved when you run the evaluation
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Run Button */}
           <Button
             onClick={handleRunEvaluation}
-            disabled={!file || !runName.trim() || isRunning}
+            disabled={(!file && !selectedDataset) || !runName.trim() || isRunning}
             className="w-full"
           >
             <Play className="mr-2 h-4 w-4" />

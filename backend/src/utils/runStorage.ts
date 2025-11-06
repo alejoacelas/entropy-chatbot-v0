@@ -89,6 +89,7 @@ export function convertToPromptfooFormat(savedRun: SavedRun): PromptfooResult {
     testIdx: idx,
     testCase: {
       vars: {
+        prompt: result.prompt,
         user_message: result.prompt,
       },
     },

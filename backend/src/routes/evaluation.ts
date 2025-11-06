@@ -3,6 +3,7 @@ import multer from 'multer';
 import { runEvaluation } from '../services/evaluationService.js';
 import { parsePromptsFromCsv } from '../utils/csvParser.js';
 import { saveRun, listRuns, loadRun, convertToPromptfooFormat } from '../utils/runStorage.js';
+import { saveDataset, listDatasets, loadDataset } from '../utils/datasetStorage.js';
 import { EvaluationRequest } from '../types.js';
 
 const router = express.Router();
@@ -20,7 +21,7 @@ const upload = multer({
  *
  * Accepts:
  * - CSV file (multipart/form-data with "file" field)
- * - OR JSON body with prompts array
+ * - OR JSON body with prompts array or datasetName
  * - Optional: model selection
  * - Optional: system prompt template
  *
@@ -34,6 +35,23 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
     if (req.file) {
       const csvContent = req.file.buffer.toString('utf-8');
       prompts = parsePromptsFromCsv(csvContent);
+
+      // Save dataset if datasetName is provided
+      const datasetName = req.body.datasetName;
+      if (datasetName && datasetName.trim()) {
+        await saveDataset(datasetName.trim(), prompts);
+        console.log(`Saved dataset: ${datasetName}`);
+      }
+    }
+    // Check if datasetName was provided (load existing dataset)
+    else if (req.body.datasetName && typeof req.body.datasetName === 'string') {
+      const dataset = await loadDataset(req.body.datasetName);
+      if (!dataset) {
+        return res.status(404).json({
+          error: `Dataset not found: ${req.body.datasetName}`,
+        });
+      }
+      prompts = dataset.prompts;
     }
     // Check if prompts array was sent in JSON body
     else if (req.body.prompts && Array.isArray(req.body.prompts)) {
@@ -44,7 +62,7 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
     // No valid input
     else {
       return res.status(400).json({
-        error: 'No prompts provided. Send either a CSV file or a prompts array in JSON.',
+        error: 'No prompts provided. Send either a CSV file, a datasetName, or a prompts array in JSON.',
       });
     }
 
@@ -129,6 +147,51 @@ router.get('/runs/:name', async (req, res) => {
     res.json(promptfooFormat);
   } catch (error) {
     console.error('Error loading run:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/datasets
+ *
+ * Returns: List of all saved dataset names
+ */
+router.get('/datasets', async (req, res) => {
+  try {
+    const datasets = await listDatasets();
+    res.json({
+      success: true,
+      datasets,
+    });
+  } catch (error) {
+    console.error('Error listing datasets:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/datasets/:name
+ *
+ * Returns: Specific dataset with prompts
+ */
+router.get('/datasets/:name', async (req, res) => {
+  try {
+    const datasetName = req.params.name;
+    const dataset = await loadDataset(datasetName);
+
+    if (!dataset) {
+      return res.status(404).json({
+        error: `Dataset not found: ${datasetName}`,
+      });
+    }
+
+    res.json(dataset);
+  } catch (error) {
+    console.error('Error loading dataset:', error);
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Unknown error',
     });
