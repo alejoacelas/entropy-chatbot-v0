@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { EvaluationResult } from '../types.js';
+import { EvaluationResult, PromptResult } from '../types.js';
 import { getCachedResponse, setCachedResponse } from '../utils/cache.js';
 import { generateTextWithRetry } from '../utils/aiClient.js';
 
@@ -89,7 +89,7 @@ async function evaluatePrompt(
 }
 
 /**
- * Run evaluation for multiple prompts
+ * Run evaluation for multiple prompts (single system prompt)
  */
 export async function runEvaluation(
   prompts: string[],
@@ -119,4 +119,38 @@ export async function runEvaluation(
   console.log(`Evaluation complete: ${results.length} total, ${cached} cached, ${errors} errors`);
 
   return results;
+}
+
+/**
+ * Run evaluation with multiple system prompts on same dataset
+ * This allows comparing different prompt variations
+ */
+export async function runMultiPromptEvaluation(
+  datasetPrompts: string[],
+  systemPrompts: Array<{ name: string; content: string }>,
+  model?: string
+): Promise<PromptResult[]> {
+  const modelToUse = model || DEFAULT_MODEL;
+
+  console.log(`Starting multi-prompt evaluation with model: ${modelToUse}`);
+  console.log(`Dataset size: ${datasetPrompts.length} prompts`);
+  console.log(`System prompts: ${systemPrompts.length} variations`);
+
+  const promptResults: PromptResult[] = [];
+
+  // Process each system prompt variation
+  for (let i = 0; i < systemPrompts.length; i++) {
+    const { name, content } = systemPrompts[i];
+    console.log(`\nEvaluating system prompt ${i + 1}/${systemPrompts.length}: ${name}`);
+
+    const results = await runEvaluation(datasetPrompts, modelToUse, content);
+
+    promptResults.push({
+      promptName: name,
+      promptContent: content,
+      results,
+    });
+  }
+
+  return promptResults;
 }

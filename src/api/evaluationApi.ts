@@ -6,38 +6,46 @@ export interface EvaluationResult {
   error?: string;
 }
 
+export interface PromptResult {
+  promptName: string;
+  promptContent: string;
+  results: EvaluationResult[];
+}
+
 export interface EvaluationResponse {
   success: boolean;
-  total: number;
-  cached: number;
-  errors: number;
-  results: EvaluationResult[];
+  runName: string;
+  datasetName: string;
+  model: string;
+  promptResults: PromptResult[];
+  summary: {
+    totalPrompts: number;
+    totalTests: number;
+    cached: number;
+    errors: number;
+  };
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export async function runEvaluation(
   file: File | null,
-  prompts: string[] | null,
-  model?: string,
-  systemPrompt?: string,
-  runName?: string,
-  datasetName?: string
+  datasetName: string,
+  promptNames: string[],
+  runName: string,
+  model?: string
 ): Promise<EvaluationResponse> {
   if (file) {
     const formData = new FormData();
     formData.append('file', file);
-    if (datasetName) {
-      formData.append('datasetName', datasetName);
-    }
+    formData.append('datasetName', datasetName);
+    formData.append('runName', runName);
+
+    // Send promptNames as JSON string in formData
+    formData.append('promptNames', JSON.stringify(promptNames));
+
     if (model) {
       formData.append('model', model);
-    }
-    if (systemPrompt) {
-      formData.append('systemPrompt', systemPrompt);
-    }
-    if (runName) {
-      formData.append('runName', runName);
     }
 
     const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
@@ -51,7 +59,7 @@ export async function runEvaluation(
     }
 
     return response.json();
-  } else if (datasetName) {
+  } else {
     // Load existing dataset
     const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
       method: 'POST',
@@ -60,9 +68,9 @@ export async function runEvaluation(
       },
       body: JSON.stringify({
         datasetName,
-        model,
-        systemPrompt,
+        promptNames,
         runName,
+        model,
       }),
     });
 
@@ -72,29 +80,6 @@ export async function runEvaluation(
     }
 
     return response.json();
-  } else if (prompts && prompts.length > 0) {
-    // Send as JSON instead of FormData
-    const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompts,
-        model,
-        systemPrompt,
-        runName,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(errorData.error || `HTTP ${response.status}`);
-    }
-
-    return response.json();
-  } else {
-    throw new Error('Either file, dataset, or prompts array must be provided');
   }
 }
 

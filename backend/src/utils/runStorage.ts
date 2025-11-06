@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { SavedRun, EvaluationResult, PromptfooResult, PromptfooTestResult } from '../types.js';
+import { SavedRun, PromptResult } from '../types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,28 +28,38 @@ function getRunFilePath(runName: string): string {
   return path.join(RUNS_DIR, `${sanitized}.json`);
 }
 
-// Save a run to disk
+// Save a run to disk (new multi-prompt format)
 export async function saveRun(
   runName: string,
+  datasetName: string,
   model: string,
-  systemPrompt: string,
-  results: EvaluationResult[]
+  promptResults: PromptResult[]
 ): Promise<void> {
   await ensureRunsDir();
 
-  const summary = {
-    total: results.length,
-    cached: results.filter(r => r.cached).length,
-    errors: results.filter(r => r.error).length,
-  };
+  // Calculate summary statistics
+  let totalTests = 0;
+  let totalCached = 0;
+  let totalErrors = 0;
+
+  for (const pr of promptResults) {
+    totalTests += pr.results.length;
+    totalCached += pr.results.filter(r => r.cached).length;
+    totalErrors += pr.results.filter(r => r.error).length;
+  }
 
   const savedRun: SavedRun = {
     runName,
+    datasetName,
     model,
-    systemPrompt,
     timestamp: Date.now(),
-    results,
-    summary,
+    promptResults,
+    summary: {
+      totalPrompts: promptResults.length,
+      totalTests,
+      cached: totalCached,
+      errors: totalErrors,
+    },
   };
 
   const filePath = getRunFilePath(runName);
@@ -97,40 +107,4 @@ export async function loadRun(runName: string): Promise<SavedRun | null> {
   } catch (error) {
     return null;
   }
-}
-
-// Convert SavedRun to Promptfoo format for frontend compatibility
-export function convertToPromptfooFormat(savedRun: SavedRun): PromptfooResult {
-  const results: PromptfooTestResult[] = savedRun.results.map((result, idx) => ({
-    testIdx: idx,
-    testCase: {
-      vars: {
-        prompt: result.prompt,
-        user_message: result.prompt,
-      },
-    },
-    prompt: {
-      label: savedRun.runName,
-      raw: savedRun.systemPrompt,
-    },
-    provider: {
-      label: savedRun.model,
-    },
-    response: {
-      output: result.response,
-    },
-    gradingResult: result.error ? {
-      pass: false,
-      score: 0,
-      reason: result.error,
-    } : undefined,
-    latencyMs: result.latencyMs,
-  }));
-
-  return {
-    evalId: `run-${sanitizeRunName(savedRun.runName)}-${savedRun.timestamp}`,
-    results: {
-      results,
-    },
-  };
 }

@@ -1,8 +1,8 @@
 import express from 'express';
 import multer from 'multer';
-import { runEvaluation } from '../services/evaluationService.js';
+import { runMultiPromptEvaluation } from '../services/evaluationService.js';
 import { parsePromptsFromCsv } from '../utils/csvParser.js';
-import { saveRun, listRuns, loadRun, convertToPromptfooFormat } from '../utils/runStorage.js';
+import { saveRun, listRuns, loadRun } from '../utils/runStorage.js';
 import { saveDataset, listDatasets, loadDataset } from '../utils/datasetStorage.js';
 import { savePrompt, listPrompts, loadPrompt, deletePrompt } from '../utils/promptStorage.js';
 
@@ -21,28 +21,41 @@ const upload = multer({
  * POST /api/evaluate
  *
  * Accepts:
- * - CSV file (multipart/form-data with "file" field)
- * - OR JSON body with prompts array or datasetName
+ * - CSV file or datasetName for the test data
+ * - Array of promptNames to run on the dataset
+ * - runName for saving the evaluation
  * - Optional: model selection
- * - Optional: system prompt template
  *
- * Returns: Array of evaluation results
+ * Body format (multipart or JSON):
+ * {
+ *   file?: File,                    // CSV upload
+ *   datasetName?: string,           // Name for new dataset or existing dataset to load
+ *   promptNames: string[],          // Array of system prompt names to test
+ *   runName: string,                // Name for this evaluation run
+ *   model?: string                  // Model to use (optional)
+ * }
  */
 router.post('/evaluate', upload.single('file'), async (req, res) => {
   try {
-    let prompts: string[] = [];
+    let datasetPrompts: string[] = [];
+    let datasetName = '';
 
     // Check if CSV file was uploaded
     if (req.file) {
       const csvContent = req.file.buffer.toString('utf-8');
-      prompts = parsePromptsFromCsv(csvContent);
+      datasetPrompts = parsePromptsFromCsv(csvContent);
 
-      // Save dataset if datasetName is provided
-      const datasetName = req.body.datasetName;
-      if (datasetName && datasetName.trim()) {
-        await saveDataset(datasetName.trim(), prompts);
-        console.log(`Saved dataset: ${datasetName}`);
+      // Dataset name is required when uploading CSV
+      datasetName = req.body.datasetName;
+      if (!datasetName || !datasetName.trim()) {
+        return res.status(400).json({
+          error: 'Dataset name is required when uploading a CSV file.',
+        });
       }
+
+      // Save the dataset
+      await saveDataset(datasetName.trim(), datasetPrompts);
+      console.log(`Saved dataset: ${datasetName}`);
     }
     // Check if datasetName was provided (load existing dataset)
     else if (req.body.datasetName && typeof req.body.datasetName === 'string') {
@@ -52,51 +65,106 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
           error: `Dataset not found: ${req.body.datasetName}`,
         });
       }
-      prompts = dataset.prompts;
-    }
-    // Check if prompts array was sent in JSON body
-    else if (req.body.prompts && Array.isArray(req.body.prompts)) {
-      prompts = req.body.prompts.filter(
-        (p: any) => typeof p === 'string' && p.trim().length > 0
-      );
+      datasetPrompts = dataset.prompts;
+      datasetName = req.body.datasetName;
     }
     // No valid input
     else {
       return res.status(400).json({
-        error: 'No prompts provided. Send either a CSV file, a datasetName, or a prompts array in JSON.',
+        error: 'No dataset provided. Send either a CSV file with datasetName, or an existing datasetName.',
       });
     }
 
-    if (prompts.length === 0) {
+    if (datasetPrompts.length === 0) {
       return res.status(400).json({
-        error: 'No valid prompts found.',
+        error: 'No valid prompts found in dataset.',
       });
     }
 
-    // Extract optional parameters
-    const model = req.body.model || undefined;
-    const systemPrompt = req.body.systemPrompt || undefined;
-    const runName = req.body.runName;
+    // Get array of system prompt names
+    let promptNames = req.body.promptNames;
 
-    console.log(`Received evaluation request with ${prompts.length} prompts`);
-
-    // Run evaluation
-    const results = await runEvaluation(prompts, model, systemPrompt);
-
-    // Save run if runName is provided
-    if (runName && runName.trim()) {
-      const actualModel = model || DEFAULT_MODEL;
-      await saveRun(runName.trim(), actualModel, systemPrompt || '', results);
-      console.log(`Saved run: ${runName}`);
+    // If promptNames is a string (from FormData), parse it as JSON
+    if (typeof promptNames === 'string') {
+      try {
+        promptNames = JSON.parse(promptNames);
+      } catch (e) {
+        return res.status(400).json({
+          error: 'promptNames must be a valid JSON array.',
+        });
+      }
     }
+
+    if (!promptNames || !Array.isArray(promptNames) || promptNames.length === 0) {
+      return res.status(400).json({
+        error: 'promptNames array is required and must contain at least one prompt name.',
+      });
+    }
+
+    // Load each system prompt
+    const systemPrompts: Array<{ name: string; content: string }> = [];
+    for (const name of promptNames) {
+      const prompt = await loadPrompt(name);
+      if (!prompt) {
+        return res.status(404).json({
+          error: `System prompt not found: ${name}`,
+        });
+      }
+      systemPrompts.push({ name: prompt.name, content: prompt.content });
+    }
+
+    // Run name is required
+    const runName = req.body.runName;
+    if (!runName || !runName.trim()) {
+      return res.status(400).json({
+        error: 'runName is required.',
+      });
+    }
+
+    const model = req.body.model || undefined;
+
+    console.log(`Received multi-prompt evaluation request:`);
+    console.log(`- Dataset: ${datasetName} (${datasetPrompts.length} prompts)`);
+    console.log(`- System prompts: ${systemPrompts.map(p => p.name).join(', ')}`);
+    console.log(`- Run name: ${runName}`);
+
+    // Run evaluation with multiple system prompts
+    const promptResults = await runMultiPromptEvaluation(datasetPrompts, systemPrompts, model);
+
+    // Calculate summary statistics
+    let totalTests = 0;
+    let totalCached = 0;
+    let totalErrors = 0;
+
+    for (const pr of promptResults) {
+      totalTests += pr.results.length;
+      totalCached += pr.results.filter(r => r.cached).length;
+      totalErrors += pr.results.filter(r => r.error).length;
+    }
+
+    // Save run
+    const actualModel = model || DEFAULT_MODEL;
+    await saveRun(
+      runName.trim(),
+      datasetName.trim(),
+      actualModel,
+      promptResults
+    );
+    console.log(`Saved run: ${runName}`);
 
     // Return results
     res.json({
       success: true,
-      total: results.length,
-      cached: results.filter(r => r.cached).length,
-      errors: results.filter(r => r.error).length,
-      results,
+      runName: runName.trim(),
+      datasetName: datasetName.trim(),
+      model: actualModel,
+      promptResults,
+      summary: {
+        totalPrompts: systemPrompts.length,
+        totalTests,
+        cached: totalCached,
+        errors: totalErrors,
+      },
     });
   } catch (error) {
     console.error('Evaluation error:', error);
@@ -129,7 +197,7 @@ router.get('/runs', async (req, res) => {
 /**
  * GET /api/runs/:name
  *
- * Returns: Specific run in Promptfoo-compatible format
+ * Returns: Specific run in native format (not Promptfoo format)
  */
 router.get('/runs/:name', async (req, res) => {
   try {
@@ -142,10 +210,8 @@ router.get('/runs/:name', async (req, res) => {
       });
     }
 
-    // Convert to Promptfoo format for frontend compatibility
-    const promptfooFormat = convertToPromptfooFormat(savedRun);
-
-    res.json(promptfooFormat);
+    // Return the run directly in our native format
+    res.json(savedRun);
   } catch (error) {
     console.error('Error loading run:', error);
     res.status(500).json({

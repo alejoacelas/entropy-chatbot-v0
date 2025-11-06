@@ -22,14 +22,21 @@ export interface CacheEntry {
   latencyMs: number;
 }
 
+export interface PromptResult {
+  promptName: string;
+  promptContent: string;
+  results: EvaluationResult[];
+}
+
 export interface SavedRun {
   runName: string;
+  datasetName: string;
   model: string;
-  systemPrompt: string;
   timestamp: number;
-  results: EvaluationResult[];
+  promptResults: PromptResult[];
   summary: {
-    total: number;
+    totalPrompts: number;
+    totalTests: number;
     cached: number;
     errors: number;
   };

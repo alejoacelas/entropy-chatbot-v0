@@ -97,67 +97,40 @@ export function EvaluationRunner() {
       return;
     }
 
+    if (selectedPrompts.size === 0) {
+      setError('Please select at least one system prompt to evaluate');
+      return;
+    }
+
     setIsRunning(true);
     setError(null);
     setResults([]);
     setSummary(null);
 
     try {
-      // If prompts are selected, run evaluation for each prompt
-      if (selectedPrompts.size > 0) {
-        const allResults: EvaluationResult[] = [];
-        let totalCached = 0;
-        let totalErrors = 0;
+      const response = await runEvaluation(
+        file,
+        file ? datasetName.trim() : selectedDataset!,
+        Array.from(selectedPrompts),
+        runName.trim(),
+        DEFAULT_MODEL
+      );
 
-        for (const promptName of selectedPrompts) {
-          try {
-            // Load the prompt content
-            const promptData = await loadPrompt(promptName);
-            const systemPrompt = promptData.content;
-
-            // Run evaluation with this prompt
-            const response = await runEvaluation(
-              file,
-              null,
-              DEFAULT_MODEL,
-              systemPrompt,
-              `${runName.trim()}-${promptName}`,
-              file ? datasetName.trim() : selectedDataset || undefined
-            );
-
-            allResults.push(...response.results);
-            totalCached += response.cached;
-            totalErrors += response.errors;
-          } catch (err) {
-            console.error(`Failed to run evaluation with prompt ${promptName}:`, err);
-            totalErrors++;
-          }
+      // The response now contains promptResults
+      // For display purposes, flatten all results
+      const allResults: EvaluationResult[] = [];
+      if (response.promptResults) {
+        for (const pr of response.promptResults) {
+          allResults.push(...pr.results);
         }
-
-        setResults(allResults);
-        setSummary({
-          total: allResults.length,
-          cached: totalCached,
-          errors: totalErrors,
-        });
-      } else {
-        // No prompt selected, run with default
-        const response = await runEvaluation(
-          file,
-          null,
-          DEFAULT_MODEL,
-          undefined,
-          runName.trim(),
-          file ? datasetName.trim() : selectedDataset || undefined
-        );
-
-        setResults(response.results);
-        setSummary({
-          total: response.total,
-          cached: response.cached,
-          errors: response.errors,
-        });
       }
+
+      setResults(allResults);
+      setSummary(response.summary || {
+        total: allResults.length,
+        cached: allResults.filter(r => r.cached).length,
+        errors: allResults.filter(r => r.error).length,
+      });
 
       // Reload datasets list if we just saved a new one
       if (file && datasetName.trim()) {
