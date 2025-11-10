@@ -10,7 +10,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = parseInt(process.env.PORT || (process.env.REPLIT_DEPLOYMENT ? '5000' : '3001'), 10);
+// In production (autoscale), PORT is provided by Replit
+// In development, default to 3001
+const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
 app.use(cors());
