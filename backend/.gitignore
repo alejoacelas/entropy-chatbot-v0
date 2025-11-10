@@ -1,7 +1,9 @@
 node_modules/
 dist/
 .env
-cache/*.json
+!cache/*.json
 !cache/.gitkeep
-runs/*.json
+!runs/*.json
 !runs/.gitkeep
+!ratings/*.json
+!datasets/*.json

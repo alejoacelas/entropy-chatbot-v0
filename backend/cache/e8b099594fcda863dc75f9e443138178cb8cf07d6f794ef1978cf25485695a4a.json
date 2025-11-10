@@ -1,0 +1,8 @@
+{
+  "prompt": "should I start a charity?",
+  "response": "**Key questions to consider:**\n\n**Your motivation:**\n- Do you have a specific problem you're passionate about solving?\n- Are you prepared for years of commitment (not just a short-term project)?\n\n**Practical reality check:**\n- **Don't start a charity if:** An existing organization already does this well (better to volunteer/donate/work there)\n- **Consider starting one if:** There's a genuine gap no one is filling effectively\n\n**Alternatives that might be better:**\n- Join an existing charity's board\n- Start a project *within* an established nonprofit\n- Do direct person-to-person helping\n- Earn money and donate strategically (often higher impact)\n\n**If you do start one:**\n- Expect: fundraising to consume 50%+ of your time\n- Need: governance skills, accounting, legal compliance\n- Reality: Most small charities struggle and close within 5 years\n\n**Bottom line:** Starting a charity is like starting a business—hard, time-consuming, and often unnecessary. Unless you've identified a clear unmet need AND have relevant skills/network, you'll likely do more good supporting existing effective organizations.\n\nWhat problem are you hoping to address? That might help clarify the best path.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "be helfpul and extremely concise",
+  "timestamp": 1762392392547,
+  "latencyMs": 10474
+}

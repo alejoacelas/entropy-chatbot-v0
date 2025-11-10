@@ -1,0 +1,50 @@
+{
+  "runName": "ultra-run",
+  "datasetName": "2-prompt-test",
+  "model": "claude-sonnet-4-5-20250929",
+  "timestamp": 1762396360813,
+  "promptResults": [
+    {
+      "promptName": "test-prompt-1",
+      "promptContent": "be weid",
+      "results": [
+        {
+          "prompt": "should I start a charity?",
+          "response": "Some questions to consider:\n\n**Good reasons to start one:**\n- You've identified a specific, unmet need you're uniquely positioned to address\n- Existing charities aren't effectively solving this problem\n- You have relevant expertise, connections, or resources\n- You're committed for the long haul (charities take years to build)\n\n**Reasons to pause:**\n- An existing charity already does this well → consider volunteering, donating, or joining their board instead\n- You mainly want to \"help people\" generally → your time/money might go further supporting established organizations\n- It's primarily for resume-building or tax benefits → there are easier ways\n\n**The practical reality:**\nStarting a charity means becoming a nonprofit administrator: fundraising, compliance, accounting, board management, insurance. Most founders spend 70%+ of their time on operations vs. direct impact.\n\n**Alternative paths with faster impact:**\n- Donate strategically to effective charities\n- Volunteer specialized skills\n- Organize grassroots efforts without formal nonprofit status\n- Start a social enterprise instead\n\n**If you're still interested:** Start small. Run a pilot project, build a track record, prove the concept works. Many successful charities began as informal volunteer efforts.\n\nWhat specific problem are you hoping to address? That might help clarify whether starting fresh makes sense.",
+          "cached": true,
+          "latencyMs": 11366
+        },
+        {
+          "prompt": "should I start a charity?",
+          "response": "Some questions to consider:\n\n**Good reasons to start one:**\n- You've identified a specific, unmet need you're uniquely positioned to address\n- Existing charities aren't effectively solving this problem\n- You have relevant expertise, connections, or resources\n- You're committed for the long haul (charities take years to build)\n\n**Reasons to pause:**\n- An existing charity already does this well → consider volunteering, donating, or joining their board instead\n- You mainly want to \"help people\" generally → your time/money might go further supporting established organizations\n- It's primarily for resume-building or tax benefits → there are easier ways\n\n**The practical reality:**\nStarting a charity means becoming a nonprofit administrator: fundraising, compliance, accounting, board management, insurance. Most founders spend 70%+ of their time on operations vs. direct impact.\n\n**Alternative paths with faster impact:**\n- Donate strategically to effective charities\n- Volunteer specialized skills\n- Organize grassroots efforts without formal nonprofit status\n- Start a social enterprise instead\n\n**If you're still interested:** Start small. Run a pilot project, build a track record, prove the concept works. Many successful charities began as informal volunteer efforts.\n\nWhat specific problem are you hoping to address? That might help clarify whether starting fresh makes sense.",
+          "cached": true,
+          "latencyMs": 11366
+        }
+      ]
+    },
+    {
+      "promptName": "test-prompt-2",
+      "promptContent": "be double helpful: {user_message}",
+      "results": [
+        {
+          "prompt": "should I start a charity?",
+          "response": "# Should You Start a Charity?\n\nStarting a charity is a significant commitment. Here are key questions to consider:\n\n## Ask Yourself First:\n\n**1. Is there an existing charity doing this work?**\n- You might have more impact by supporting/volunteering with an established organization than starting from scratch\n- They already have infrastructure, expertise, and donor relationships\n\n**2. Do you have the capacity?**\n- Time commitment (often 20+ hours/week initially)\n- Financial runway (charities often take years to become sustainable)\n- Relevant skills or willingness to learn (fundraising, accounting, management, compliance)\n\n**3. What's your unique value?**\n- Do you have special expertise, connections, or an innovative approach?\n- Is there a genuine gap in services?\n\n## Consider Alternatives:\n\n- **Volunteer** with existing organizations\n- **Donate** to effective charities\n- **Start a project** within an existing nonprofit (fiscal sponsorship)\n- **Organize informally** before committing to nonprofit status\n- **Social enterprise** if a business model could work\n\n## If You Proceed:\n\n- Start small and test your model\n- Build a strong board\n- Understand legal/tax requirements in your jurisdiction\n- Have a realistic fundraising plan\n- Focus on measurable impact\n\n**What cause are you passionate about?** That might help me give more specific guidance.",
+          "cached": true,
+          "latencyMs": 10807
+        },
+        {
+          "prompt": "should I start a charity?",
+          "response": "# Should You Start a Charity?\n\nStarting a charity is a significant commitment. Here are key questions to consider:\n\n## Ask Yourself First:\n\n**1. Is there an existing charity doing this work?**\n- You might have more impact by supporting/volunteering with an established organization than starting from scratch\n- They already have infrastructure, expertise, and donor relationships\n\n**2. Do you have the capacity?**\n- Time commitment (often 20+ hours/week initially)\n- Financial runway (charities often take years to become sustainable)\n- Relevant skills or willingness to learn (fundraising, accounting, management, compliance)\n\n**3. What's your unique value?**\n- Do you have special expertise, connections, or an innovative approach?\n- Is there a genuine gap in services?\n\n## Consider Alternatives:\n\n- **Volunteer** with existing organizations\n- **Donate** to effective charities\n- **Start a project** within an existing nonprofit (fiscal sponsorship)\n- **Organize informally** before committing to nonprofit status\n- **Social enterprise** if a business model could work\n\n## If You Proceed:\n\n- Start small and test your model\n- Build a strong board\n- Understand legal/tax requirements in your jurisdiction\n- Have a realistic fundraising plan\n- Focus on measurable impact\n\n**What cause are you passionate about?** That might help me give more specific guidance.",
+          "cached": true,
+          "latencyMs": 10807
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalPrompts": 2,
+    "totalTests": 4,
+    "cached": 4,
+    "errors": 0
+  }
+}
