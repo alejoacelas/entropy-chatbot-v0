@@ -66,4 +66,4 @@ build = "npm install && npm run build && cd backend && npm install && npm run bu
 channel = "stable-25_05"
 
 [objectStorage]
-defaultBucketID = "replit-objstore-02f17db6-18ce-433f-a97b-321b646840d2"
+defaultBucketID = "replit-objstore-ebca5a09-7878-4fe2-8666-075db99952b7"
