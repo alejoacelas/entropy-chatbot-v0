@@ -66,21 +66,44 @@ Preferred communication style: Simple, everyday language.
 - Streams responses for efficient processing
 - Requires `ANTHROPIC_API_KEY` environment variable
 
-**File-Based Storage**
-All data persisted to local filesystem in backend directory:
+**Storage Architecture**
 
-- **Prompts** (`backend/prompts/`) - System prompt templates stored as JSON files
-- **Datasets** (`backend/datasets/`) - Evaluation datasets (CSV data) stored as JSON files
-- **Runs** (`backend/runs/`) - Completed evaluation results with all prompt outputs
-- **Ratings** (`backend/ratings/`) - User ratings and comments per run/user combination
-- **Cache** (`backend/cache/`) - Cached AI responses keyed by model + system prompt + user message (SHA-256 hash)
+The application uses a storage abstraction layer that automatically adapts to the deployment environment:
+
+**Development (Local)**
+- Uses **FileSystemStorage** adapter for local file-based storage
+- Data stored in backend directories: `prompts/`, `datasets/`, `runs/`, `ratings/`, `cache/`
+- All JSON files remain on local disk
+- Logged as: "Using local file system storage"
+
+**Production (Replit Deployment)**
+- Uses **ObjectStorage** adapter with Replit's Object Storage (Google Cloud Storage)
+- Persistent, cloud-based storage that survives deployments
+- Automatically detected when `REPLIT_DEPLOYMENT=1` (set by Replit)
+- Requires `STORAGE_BUCKET_NAME` environment variable
+- Logged as: "Using Replit Object Storage (bucket: {name})"
+
+**Storage Abstraction Layer** (`backend/src/storage/`)
+- `IStorage` interface defines common operations: save, load, list, delete, exists
+- `FileSystemStorage.ts` - Local file system adapter
+- `ObjectStorage.ts` - Replit Object Storage adapter using `@google-cloud/storage`
+- `StorageFactory.ts` - Environment detection and adapter selection
+- Transparent switching - no code changes needed between environments
+
+**Data Organization**
+All storage adapters maintain the same key structure:
+- **Prompts** (`prompts/*.json`) - System prompt templates
+- **Datasets** (`datasets/*.json`) - Evaluation datasets (CSV data)
+- **Runs** (`runs/*.json`) - Completed evaluation results with all prompt outputs
+- **Ratings** (`ratings/*.json`) - User ratings and comments per run/user combination
+- **Cache** (`cache/*.json`) - Cached AI responses keyed by SHA-256 hash
 
 **Services & Utilities**
 - `evaluationService.ts` - Core evaluation logic with rate limiting and caching
-- `cache.ts` - File-based response caching to reduce API calls
+- `cache.ts` - Response caching to reduce API calls
 - `aiClient.ts` - AI API client with exponential backoff retry logic
 - `csvParser.ts` - CSV parsing for dataset uploads
-- Storage utilities for prompts, datasets, runs, and ratings
+- Storage utilities (`promptStorage.ts`, `datasetStorage.ts`, `runStorage.ts`, `ratingStorage.ts`) - All use StorageFactory abstraction
 
 ### Application Features
 
@@ -154,6 +177,7 @@ All data persisted to local filesystem in backend directory:
 - **csv-parse** - CSV parsing utility
 - **dotenv** - Environment variable management
 - **tsx** - TypeScript execution for development
+- **@google-cloud/storage** - Google Cloud Storage client for Replit Object Storage
 
 ### Development Tools
 - **TypeScript** - Static type checking (frontend & backend)
@@ -176,16 +200,74 @@ Two workflows configured:
 
 ## Environment Variables
 
-Required secrets:
+### Required Secrets
 - `ANTHROPIC_API_KEY` - API key for Anthropic Claude access
 
-Optional configuration:
-- `VITE_API_URL` - Backend API URL (defaults to `http://localhost:3001`)
+### Development Configuration (Optional)
+- `VITE_API_URL` - Backend API URL (defaults to relative URLs with Vite proxy)
 - `PORT` - Backend server port (defaults to 3001)
+
+### Production Configuration (Replit Deployment)
+- `STORAGE_BUCKET_NAME` - **Required** for production. Name of the Replit Object Storage bucket
+  - Create a bucket in the Replit Object Storage tool
+  - Set this environment variable to the bucket name (e.g., "ai-evaluation-data")
+  - The system automatically uses Object Storage when `REPLIT_DEPLOYMENT=1` (auto-set by Replit)
+
+## Deployment Guide
+
+### Local Development
+1. Clone the repository
+2. Install dependencies: `npm install` (frontend) and `cd backend && npm install` (backend)
+3. Set `ANTHROPIC_API_KEY` in environment or `.env` file
+4. Run workflows: `npm run dev` (frontend) and `cd backend && npm run dev` (backend)
+5. Data stored locally in `backend/prompts/`, `backend/datasets/`, etc.
+
+### Replit Production Deployment
+1. **Create Object Storage Bucket**:
+   - Open the "Object Storage" tool in Replit
+   - Create a new bucket (e.g., "ai-evaluation-data")
+   - Note the bucket name
+
+2. **Set Environment Variables**:
+   - Add `STORAGE_BUCKET_NAME` environment variable with your bucket name
+   - `ANTHROPIC_API_KEY` should already be in Secrets
+   - `REPLIT_DEPLOYMENT=1` is automatically set by Replit during deployment
+
+3. **Deploy**:
+   - Click "Deploy" button in Replit
+   - The system will automatically:
+     - Detect deployment environment
+     - Use Object Storage instead of local files
+     - Log: "Using Replit Object Storage (bucket: {name})"
+
+4. **Verify**:
+   - Check backend logs for "Using Replit Object Storage"
+   - Test creating a prompt or dataset
+   - Data will persist across deployments in Object Storage
+
+### Storage Migration Notes
+- Existing local data will NOT automatically migrate to Object Storage
+- When deploying to production, you'll start with empty storage
+- To migrate data: manually copy JSON files from local directories to Object Storage bucket
+- Object Storage uses the same directory structure: `prompts/`, `datasets/`, `runs/`, `ratings/`, `cache/`
 
 ## Recent Changes (November 10, 2025)
 
-**Major Additions:**
+**Storage Architecture Migration:**
+- Implemented storage abstraction layer for environment-aware data persistence
+- Added `IStorage` interface with FileSystemStorage and ObjectStorage adapters
+- Created `StorageFactory` with automatic environment detection
+- Migrated all storage services (prompts, datasets, runs, ratings, cache) to use abstraction
+- Local development uses file system storage (unchanged behavior)
+- Production deployment uses Replit Object Storage for persistent, reliable cloud storage
+- Installed `@google-cloud/storage` dependency for Object Storage integration
+
+**Frontend-Backend Connection:**
+- Added Vite proxy configuration to forward `/api` requests to backend
+- Updated API client to use relative URLs instead of hardcoded localhost
+- Fixed connection issues in Replit environment
+
+**Major Additions (Earlier):**
 - Added complete Node.js/Express backend with TypeScript
 - Implemented file-based storage system for all data
 - Integrated Anthropic AI SDK for Claude API access
@@ -205,6 +287,7 @@ Optional configuration:
 - Frontend workflow configured on port 5000
 - All npm dependencies installed and verified
 - Anthropic API key configured in secrets
+- Replit Object Storage integration added
 
 ## Usage Flow
 
@@ -216,8 +299,18 @@ Optional configuration:
 
 ## Data Persistence
 
-All data is stored locally in the backend file system:
-- Prompts, datasets, runs, and ratings survive server restarts
-- Cached responses persist to minimize API costs
-- No database required - simple JSON file storage
+**Development:**
+- Data stored locally in backend file system (`prompts/`, `datasets/`, `runs/`, `ratings/`, `cache/`)
+- Files survive server restarts on local machine
+- Simple JSON file storage, no database required
+
+**Production (Replit Deployment):**
+- Data stored in Replit Object Storage (Google Cloud Storage)
+- Files persist across deployments and server restarts
+- Reliable, cloud-based storage with industry-leading uptime
+- Same JSON structure and directory organization as local storage
+
+**Shared Features:**
+- Cached AI responses minimize API costs
 - Ratings tracked per user per run for collaborative review
+- All data stored as JSON for easy inspection and portability
