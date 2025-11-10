@@ -48,14 +48,18 @@ externalPort = 3001
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 36063
+externalPort = 3000
+
 [agent]
 expertMode = true
 integrations = ["javascript_object_storage:1.0.0"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npm", "run", "preview"]
-build = ["npm", "run", "build"]
+run = ["node", "backend/dist/index.js"]
+build = ["bash", "-c", "npm run build && cd backend && npm install && npm run build"]
 
 [nix]
 channel = "stable-25_05"
