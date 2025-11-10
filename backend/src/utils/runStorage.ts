@@ -1,41 +1,25 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { StorageFactory } from '../storage/index.js';
 import { SavedRun, PromptResult } from '../types.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const RUNS_DIR = path.join(__dirname, '../../runs');
-
-// Ensure runs directory exists
-async function ensureRunsDir() {
-  try {
-    await fs.access(RUNS_DIR);
-  } catch {
-    await fs.mkdir(RUNS_DIR, { recursive: true });
-  }
-}
 
 // Sanitize run name for use as filename
 function sanitizeRunName(name: string): string {
   return name.replace(/[^a-zA-Z0-9-_]/g, '_');
 }
 
-// Get run file path
-function getRunFilePath(runName: string): string {
+// Get run storage key
+function getRunKey(runName: string): string {
   const sanitized = sanitizeRunName(runName);
-  return path.join(RUNS_DIR, `${sanitized}.json`);
+  return `runs/${sanitized}.json`;
 }
 
-// Save a run to disk (new multi-prompt format)
+// Save a run (new multi-prompt format)
 export async function saveRun(
   runName: string,
   datasetName: string,
   model: string,
   promptResults: PromptResult[]
 ): Promise<void> {
-  await ensureRunsDir();
+  const storage = StorageFactory.getStorage();
 
   // Calculate summary statistics
   let totalTests = 0;
@@ -62,26 +46,25 @@ export async function saveRun(
     },
   };
 
-  const filePath = getRunFilePath(runName);
-  await fs.writeFile(filePath, JSON.stringify(savedRun, null, 2), 'utf-8');
+  const key = getRunKey(runName);
+  await storage.save(key, savedRun);
 }
 
 // List all saved runs
 export async function listRuns(): Promise<string[]> {
-  await ensureRunsDir();
+  const storage = StorageFactory.getStorage();
 
   try {
-    const files = await fs.readdir(RUNS_DIR);
+    const files = await storage.list('runs/');
     const jsonFiles = files.filter(f => f.endsWith('.json'));
 
     // Read each file to get the original name
     const runs = await Promise.all(
       jsonFiles.map(async (file) => {
         try {
-          const filePath = path.join(RUNS_DIR, file);
-          const data = await fs.readFile(filePath, 'utf-8');
-          const parsed: SavedRun = JSON.parse(data);
-          return parsed.runName;
+          const key = `runs/${file}`;
+          const parsed = await storage.load<SavedRun>(key);
+          return parsed?.runName || file.replace('.json', '').replace(/_/g, ' ');
         } catch {
           // If file is corrupt, return filename without extension
           return file.replace('.json', '').replace(/_/g, ' ');
@@ -97,14 +80,7 @@ export async function listRuns(): Promise<string[]> {
 
 // Load a specific run
 export async function loadRun(runName: string): Promise<SavedRun | null> {
-  await ensureRunsDir();
-
-  const filePath = getRunFilePath(runName);
-
-  try {
-    const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    return null;
-  }
+  const storage = StorageFactory.getStorage();
+  const key = getRunKey(runName);
+  return await storage.load<SavedRun>(key);
 }

@@ -1,11 +1,4 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const DATASETS_DIR = path.join(__dirname, '../../datasets');
+import { StorageFactory } from '../storage/index.js';
 
 export interface SavedDataset {
   name: string;
@@ -13,32 +6,23 @@ export interface SavedDataset {
   timestamp: number;
 }
 
-// Ensure datasets directory exists
-async function ensureDatasetsDir() {
-  try {
-    await fs.access(DATASETS_DIR);
-  } catch {
-    await fs.mkdir(DATASETS_DIR, { recursive: true });
-  }
-}
-
 // Sanitize dataset name for use as filename
 function sanitizeDatasetName(name: string): string {
   return name.replace(/[^a-zA-Z0-9-_]/g, '_');
 }
 
-// Get dataset file path
-function getDatasetFilePath(datasetName: string): string {
+// Get dataset storage key
+function getDatasetKey(datasetName: string): string {
   const sanitized = sanitizeDatasetName(datasetName);
-  return path.join(DATASETS_DIR, `${sanitized}.json`);
+  return `datasets/${sanitized}.json`;
 }
 
-// Save a dataset to disk
+// Save a dataset
 export async function saveDataset(
   datasetName: string,
   prompts: string[]
 ): Promise<void> {
-  await ensureDatasetsDir();
+  const storage = StorageFactory.getStorage();
 
   const savedDataset: SavedDataset = {
     name: datasetName,
@@ -46,26 +30,25 @@ export async function saveDataset(
     timestamp: Date.now(),
   };
 
-  const filePath = getDatasetFilePath(datasetName);
-  await fs.writeFile(filePath, JSON.stringify(savedDataset, null, 2), 'utf-8');
+  const key = getDatasetKey(datasetName);
+  await storage.save(key, savedDataset);
 }
 
 // List all saved datasets
 export async function listDatasets(): Promise<string[]> {
-  await ensureDatasetsDir();
+  const storage = StorageFactory.getStorage();
 
   try {
-    const files = await fs.readdir(DATASETS_DIR);
+    const files = await storage.list('datasets/');
     const jsonFiles = files.filter(f => f.endsWith('.json'));
 
     // Read each file to get the original name
     const datasets = await Promise.all(
       jsonFiles.map(async (file) => {
         try {
-          const filePath = path.join(DATASETS_DIR, file);
-          const data = await fs.readFile(filePath, 'utf-8');
-          const parsed: SavedDataset = JSON.parse(data);
-          return parsed.name;
+          const key = `datasets/${file}`;
+          const parsed = await storage.load<SavedDataset>(key);
+          return parsed?.name || file.replace('.json', '').replace(/_/g, ' ');
         } catch {
           // If file is corrupt, return filename without extension
           return file.replace('.json', '').replace(/_/g, ' ');
@@ -81,14 +64,7 @@ export async function listDatasets(): Promise<string[]> {
 
 // Load a specific dataset
 export async function loadDataset(datasetName: string): Promise<SavedDataset | null> {
-  await ensureDatasetsDir();
-
-  const filePath = getDatasetFilePath(datasetName);
-
-  try {
-    const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    return null;
-  }
+  const storage = StorageFactory.getStorage();
+  const key = getDatasetKey(datasetName);
+  return await storage.load<SavedDataset>(key);
 }

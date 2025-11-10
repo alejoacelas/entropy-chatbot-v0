@@ -1,11 +1,4 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const RATINGS_DIR = path.join(__dirname, '../../ratings');
+import { StorageFactory } from '../storage/index.js';
 
 export interface QuestionRating {
   promptIndex: number;
@@ -22,25 +15,16 @@ export interface SavedRating {
   ratings: QuestionRating[];
 }
 
-// Ensure ratings directory exists
-async function ensureRatingsDir() {
-  try {
-    await fs.access(RATINGS_DIR);
-  } catch {
-    await fs.mkdir(RATINGS_DIR, { recursive: true });
-  }
-}
-
 // Sanitize string for use in filename
 function sanitize(str: string): string {
   return str.replace(/[^a-zA-Z0-9-_]/g, '_');
 }
 
-// Get rating file path
-function getRatingFilePath(runName: string, ratingUser: string): string {
+// Get rating storage key
+function getRatingKey(runName: string, ratingUser: string): string {
   const sanitizedRun = sanitize(runName);
   const sanitizedUser = sanitize(ratingUser);
-  return path.join(RATINGS_DIR, `${sanitizedRun}_${sanitizedUser}.json`);
+  return `ratings/${sanitizedRun}_${sanitizedUser}.json`;
 }
 
 // Load ratings for a specific run and user
@@ -48,13 +32,21 @@ export async function loadRatings(
   runName: string,
   ratingUser: string
 ): Promise<SavedRating | null> {
-  await ensureRatingsDir();
-
-  const filePath = getRatingFilePath(runName, ratingUser);
+  const storage = StorageFactory.getStorage();
+  const key = getRatingKey(runName, ratingUser);
 
   try {
-    const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
+    const data = await storage.load<SavedRating>(key);
+    if (data) {
+      return data;
+    }
+    // Return empty ratings if file doesn't exist
+    return {
+      runName,
+      ratingUser,
+      timestamp: Date.now(),
+      ratings: [],
+    };
   } catch (error) {
     // Return empty ratings if file doesn't exist
     return {
@@ -75,7 +67,7 @@ export async function saveRating(
   rating: number,
   comment: string
 ): Promise<void> {
-  await ensureRatingsDir();
+  const storage = StorageFactory.getStorage();
 
   // Load existing ratings
   const existing = await loadRatings(runName, ratingUser);
@@ -100,8 +92,8 @@ export async function saveRating(
 
   existing.timestamp = Date.now();
 
-  const filePath = getRatingFilePath(runName, ratingUser);
-  await fs.writeFile(filePath, JSON.stringify(existing, null, 2), 'utf-8');
+  const key = getRatingKey(runName, ratingUser);
+  await storage.save(key, existing);
 }
 
 // Get rating for a specific question
