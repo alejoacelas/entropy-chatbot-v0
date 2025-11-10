@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Download } from 'lucide-react';
 import { listRuns, loadRun, loadRatings, saveRating as saveRatingApi } from '@/api/evaluationApi';
 import type { SavedRating } from '@/api/evaluationApi';
 
@@ -353,13 +353,105 @@ function ReviewApp() {
     }
   };
 
+  const handleExportToCSV = async () => {
+    if (!runData || !selectedRun) return;
+
+    // Load all ratings for all users
+    const allUserRatings: Record<string, SavedRating> = {};
+    for (const user of RATING_USERS) {
+      try {
+        const ratings = await loadRatings(selectedRun, user);
+        allUserRatings[user] = ratings;
+      } catch (err) {
+        console.log(`No ratings found for user ${user}`);
+        // User may not have rated anything yet
+        allUserRatings[user] = {
+          runName: selectedRun,
+          ratingUser: user,
+          timestamp: Date.now(),
+          ratings: [],
+        };
+      }
+    }
+
+    // Build CSV headers
+    const headers = ['Question'];
+    runData.promptResults.forEach((pr) => {
+      headers.push(`Response-${pr.promptName}`);
+      headers.push(`Error-${pr.promptName}`);
+      RATING_USERS.forEach((user) => {
+        headers.push(`Rating-${pr.promptName}-${user}`);
+        headers.push(`Comments-${pr.promptName}-${user}`);
+      });
+    });
+
+    // Build CSV rows
+    const rows: string[][] = [headers];
+
+    // Assuming all prompts have the same number of questions
+    const numQuestions = runData.promptResults[0].results.length;
+
+    for (let questionIndex = 0; questionIndex < numQuestions; questionIndex++) {
+      const row: string[] = [];
+
+      // Add question text (from first prompt)
+      const question = runData.promptResults[0].results[questionIndex].prompt;
+      row.push(escapeCSV(question));
+
+      // For each prompt, add response and ratings
+      runData.promptResults.forEach((pr, promptIndex) => {
+        const result = pr.results[questionIndex];
+
+        // Add response
+        row.push(escapeCSV(result.response));
+        row.push(escapeCSV(result.error || ''));
+
+        // Add ratings from all users
+        RATING_USERS.forEach((user) => {
+          const userRatings = allUserRatings[user];
+          const rating = userRatings?.ratings.find(
+            r => r.promptIndex === promptIndex && r.questionIndex === questionIndex
+          );
+
+          row.push(rating?.rating.toString() || '');
+          row.push(escapeCSV(rating?.comment || ''));
+        });
+      });
+
+      rows.push(row);
+    }
+
+    // Convert to CSV string
+    const csvContent = rows.map(row => row.join(',')).join('\n');
+
+    // Download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${selectedRun}_export.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const escapeCSV = (str: string): string => {
+    if (!str) return '';
+    // If string contains comma, newline, or quote, wrap in quotes and escape quotes
+    if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
   return (
     <div className="container mx-auto p-0">
       {/* Header with Run Selection */}
       <Card className="mb-6">
         <CardContent className="space-y-4">
           {/* Run Selection, Prompt Selection, and Rating User on the same row */}
-          <div className="flex flex-col gap-4 md:flex-row md:gap-6">
+          <div className="flex flex-col gap-4 md:flex-row md:gap-6 md:items-end">
             <div className="flex-1 min-w-0">
               <label className="block text-sm font-medium mb-2">Evaluation Run</label>
               <Select value={selectedRun || undefined} onValueChange={setSelectedRun}>
@@ -412,6 +504,16 @@ function ReviewApp() {
                 </SelectContent>
               </Select>
             </div>
+
+            <Button
+              onClick={handleExportToCSV}
+              variant="outline"
+              disabled={!runData}
+              className="whitespace-nowrap"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export to CSV
+            </Button>
           </div>
           {/* Run Metadata */}
           {runData && (
