@@ -14,7 +14,7 @@ function App() {
           </p>
         </div>
 
-        <Tabs defaultValue="evaluate" className="w-full">
+        <Tabs defaultValue="review" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="review">Review Results</TabsTrigger>
             <TabsTrigger value="evaluate">Run Evaluation</TabsTrigger>
