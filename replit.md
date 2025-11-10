@@ -84,19 +84,41 @@ The system supports local development with separate frontend and backend servers
 
 **Setup Steps:**
 
-1. **Create Object Storage Bucket**:
-   - Open the "Object Storage" tool in Replit
-   - Create a new bucket (e.g., "ai-evaluation-data")
-   - Note the bucket name
+1. **Create and Configure App Storage Bucket**:
+   
+   a. **Create the bucket**:
+      - In your Replit workspace, open the "App Storage" tool from the left sidebar
+      - Click "Create new bucket"
+      - Enter a bucket name (use lowercase letters, numbers, hyphens only)
+        - Example: `entropy-evals-bucket`
+        - **IMPORTANT:** Bucket names cannot contain uppercase letters
+      - Click "Create bucket"
+   
+   b. **Get the Bucket ID** (this is critical):
+      - After creating the bucket, select it from the dropdown if not already selected
+      - Click on the "Settings" view in the App Storage tool
+      - Copy the **Bucket ID** (this is a unique identifier, different from the bucket name)
+      - Example Bucket ID format: `entropy-evals-bucket` or similar
+   
+   c. **Ensure bucket is connected to your deployment**:
+      - By default, buckets are accessible to all your Replit Apps
+      - If you need to explicitly add the bucket:
+        - In App Storage tool, select "Add an existing bucket" from the bucket menu
+        - Choose your bucket and click "Add Bucket to Repl"
 
-2. **Set Environment Variables**:
-   - Add `STORAGE_BUCKET_NAME` environment variable with your bucket name
-   - `ANTHROPIC_API_KEY` should already be in Secrets
-   - `REPLIT_DEPLOYMENT=1` is automatically set by Replit during deployment
-   - `PORT` is automatically provided by Replit autoscale
+2. **Set Environment Variables in Production**:
+   
+   **CRITICAL:** Set these in your deployment's environment variables, not just in dev Secrets:
+   
+   - `STORAGE_BUCKET_NAME` - **Must be the exact Bucket ID** from step 1b above
+     - Common mistake: Using a name you made up instead of the actual Bucket ID
+     - To fix: Copy the Bucket ID from App Storage Settings, not what you think it should be
+   - `ANTHROPIC_API_KEY` - Should already be in Secrets
+   - `REPLIT_DEPLOYMENT=1` - Automatically set by Replit (don't set manually)
+   - `PORT` - Automatically provided by Replit autoscale (don't set manually)
 
 3. **Deploy**:
-   - Click "Deploy" button in Replit
+   - Click the "Deploy" button in Replit
    - The deployment build process will:
      - Install frontend dependencies (`npm install`)
      - Build frontend static files (`npm run build`)
@@ -108,16 +130,61 @@ The system supports local development with separate frontend and backend servers
      - Detect deployment environment via `REPLIT_DEPLOYMENT=1`
      - Serve frontend static files from the `dist/` directory
      - Serve API routes at `/api/*`
-     - Use Object Storage for data persistence
-     - Log: "Using Replit Object Storage (bucket: {name})"
+     - Use App Storage for data persistence
+     - Log: "Using Replit Object Storage (bucket: {bucket-id})"
      - Log: "Running in deployment mode - serving frontend static files"
 
 4. **Verify**:
-   - Check deployment logs for "Using Replit Object Storage"
+   - Check deployment logs for "Using Replit Object Storage (bucket: your-bucket-id)"
    - Check for "Running in deployment mode - serving frontend static files"
+   - If you see errors, check the Troubleshooting section below
    - Test the application in your browser
-   - Create a prompt or dataset to verify Object Storage is working
-   - Data will persist across deployments in Object Storage
+   - Create a prompt or dataset to verify App Storage is working
+   - Data will persist across deployments in App Storage
+
+## Troubleshooting App Storage Issues
+
+### Error: "Invalid bucket name"
+- **Cause:** Bucket names must be lowercase only
+- **Solution:** 
+  - Create a new bucket with all lowercase name (e.g., `entropy-evals-bucket`)
+  - Update `STORAGE_BUCKET_NAME` environment variable with the new Bucket ID
+  - Redeploy
+
+### Error: "The specified bucket does not exist" (404)
+- **Cause 1:** Using a bucket name instead of the actual Bucket ID
+  - **Solution:** 
+    1. Open App Storage tool
+    2. Select your bucket
+    3. Go to Settings view
+    4. Copy the actual **Bucket ID**
+    5. Update `STORAGE_BUCKET_NAME` with this exact value
+    6. Redeploy
+
+- **Cause 2:** Bucket not connected to your deployment
+  - **Solution:**
+    1. Open App Storage tool
+    2. Click "Add an existing bucket"
+    3. Select your bucket
+    4. Click "Add Bucket to Repl"
+    5. Redeploy
+
+- **Cause 3:** Environment variable not set in production deployment
+  - **Solution:**
+    1. Go to your deployment settings (not dev environment)
+    2. Verify `STORAGE_BUCKET_NAME` is set in the deployment environment variables
+    3. The value must match the Bucket ID from App Storage Settings
+    4. Redeploy after making changes
+
+### Error: "Permission denied" or authentication errors
+- **Cause:** App Storage authentication requires the app to run on Replit
+- **Solution:** This is expected in local development. Use the development file system storage instead (automatic when not deployed)
+
+### How to verify your setup:
+1. In App Storage tool, confirm your bucket exists and note the exact Bucket ID
+2. In deployment environment variables, confirm `STORAGE_BUCKET_NAME` matches that exact Bucket ID
+3. Check deployment logs for the startup message showing the bucket being used
+4. Test creating a prompt - if it saves successfully, App Storage is working
 
 ### Deployment Configuration
 
@@ -142,11 +209,35 @@ node backend/dist/index.js
 - `PORT` - Backend server port (defaults to 3001 in development)
 
 ### Production Configuration (Replit Deployment)
-- `STORAGE_BUCKET_NAME` - **Required** for production. Name of the Replit Object Storage bucket
+- `STORAGE_BUCKET_NAME` - **Required** for production. Must be the exact Bucket ID from App Storage Settings (not a custom name)
 - `PORT` - Automatically provided by Replit autoscale (do not set manually)
 - `REPLIT_DEPLOYMENT=1` - Automatically set by Replit during deployment
 
+## Quick Setup Checklist for Production
+
+Use this checklist to verify your App Storage setup:
+
+- [ ] Created bucket in App Storage tool (lowercase name only)
+- [ ] Copied exact Bucket ID from App Storage → Settings view
+- [ ] Set `STORAGE_BUCKET_NAME` in deployment environment variables to match Bucket ID
+- [ ] Verified bucket is connected to this Repl (should be automatic)
+- [ ] Set `ANTHROPIC_API_KEY` in deployment environment variables
+- [ ] Deployed the application
+- [ ] Checked deployment logs for "Using Replit Object Storage (bucket: ...)"
+- [ ] Tested creating a prompt to verify storage works
+
 ## Recent Changes (November 10, 2025)
+
+**App Storage Setup Documentation (Latest):**
+- Comprehensive setup guide for App Storage (Object Storage) in production
+- Clear distinction between bucket name and Bucket ID
+- Step-by-step instructions for creating and configuring buckets
+- Troubleshooting guide for common errors:
+  - Invalid bucket name (uppercase letters issue)
+  - Bucket not found (404) - multiple causes and solutions
+  - Permission denied errors
+- Quick setup checklist for production deployments
+- Emphasis on using exact Bucket ID from App Storage Settings
 
 **Deployment Configuration Fixes:**
 - Fixed build command to install frontend dependencies before building
