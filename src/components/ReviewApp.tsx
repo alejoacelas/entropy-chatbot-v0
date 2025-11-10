@@ -141,27 +141,46 @@ function ReviewApp() {
     <div className="container mx-auto p-6 max-w-6xl">
       {/* Header with Run Selection */}
       <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Review Evaluation Results</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-4">
-          {/* Run Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Evaluation Run</label>
-            <Select value={selectedRun || undefined} onValueChange={setSelectedRun}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a run" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableRuns.map((run) => (
-                  <SelectItem key={run} value={run}>
-                    {run}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Run Selection & Prompt Selection on the same row */}
+          <div className="flex flex-col gap-4 md:flex-row md:gap-6">
+            <div className="flex-1 min-w-0">
+              <label className="block text-sm font-medium mb-2">Evaluation Run</label>
+              <Select value={selectedRun || undefined} onValueChange={setSelectedRun}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a run" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableRuns.map((run) => (
+                    <SelectItem key={run} value={run}>
+                      {run}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
+            {runData && runData.promptResults.length > 1 && (
+              <div className="flex-1 min-w-0">
+                <label className="block text-sm font-medium mb-2">System Prompt</label>
+                <Select
+                  value={selectedPromptIndex.toString()}
+                  onValueChange={handlePromptChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {runData.promptResults.map((pr, idx) => (
+                      <SelectItem key={idx} value={idx.toString()}>
+                        {pr.promptName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
           {/* Run Metadata */}
           {runData && (
             <div className="flex flex-wrap gap-2">
@@ -176,45 +195,8 @@ function ReviewApp() {
             </div>
           )}
 
-          {/* Prompt Selection */}
-          {runData && runData.promptResults.length > 1 && (
-            <div>
-              <label className="block text-sm font-medium mb-2">System Prompt</label>
-              <Select
-                value={selectedPromptIndex.toString()}
-                onValueChange={handlePromptChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {runData.promptResults.map((pr, idx) => (
-                    <SelectItem key={idx} value={idx.toString()}>
-                      {pr.promptName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </CardContent>
       </Card>
-
-      {/* Current Prompt Details */}
-      {currentPromptResult && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>System Prompt: {currentPromptResult.promptName}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-muted p-4 rounded-md">
-              <pre className="text-sm whitespace-pre-wrap font-mono">
-                {currentPromptResult.promptContent}
-              </pre>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Question Navigation */}
       <div className="flex items-center justify-between mb-4">
@@ -282,6 +264,22 @@ function ReviewApp() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Current Prompt Details (moved to the bottom) */}
+      {currentPromptResult && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>System Prompt: {currentPromptResult.promptName}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-4 rounded-md">
+              <pre className="text-sm whitespace-pre-wrap font-mono">
+                {currentPromptResult.promptContent}
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
