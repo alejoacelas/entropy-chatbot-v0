@@ -5,6 +5,7 @@ import { parsePromptsFromCsv } from '../utils/csvParser.js';
 import { saveRun, listRuns, loadRun } from '../utils/runStorage.js';
 import { saveDataset, listDatasets, loadDataset } from '../utils/datasetStorage.js';
 import { savePrompt, listPrompts, loadPrompt, deletePrompt } from '../utils/promptStorage.js';
+import { loadRatings, saveRating } from '../utils/ratingStorage.js';
 
 const router = express.Router();
 const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
@@ -370,6 +371,77 @@ router.delete('/prompts/:name', async (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting prompt:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * GET /api/ratings/:runName/:ratingUser
+ *
+ * Returns: All ratings for a specific run and user
+ */
+router.get('/ratings/:runName/:ratingUser', async (req, res) => {
+  try {
+    const { runName, ratingUser } = req.params;
+    const ratings = await loadRatings(runName, ratingUser);
+
+    if (!ratings) {
+      return res.status(404).json({
+        error: `Ratings not found for run: ${runName}, user: ${ratingUser}`,
+      });
+    }
+
+    res.json(ratings);
+  } catch (error) {
+    console.error('Error loading ratings:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/ratings
+ *
+ * Saves a rating for a specific question
+ * Body: { runName: string, ratingUser: string, promptIndex: number, questionIndex: number, rating: number, comment: string }
+ */
+router.post('/ratings', async (req, res) => {
+  try {
+    const { runName, ratingUser, promptIndex, questionIndex, rating, comment } = req.body;
+
+    if (!runName || typeof runName !== 'string') {
+      return res.status(400).json({ error: 'runName is required' });
+    }
+
+    if (!ratingUser || typeof ratingUser !== 'string') {
+      return res.status(400).json({ error: 'ratingUser is required' });
+    }
+
+    if (typeof promptIndex !== 'number' || promptIndex < 0) {
+      return res.status(400).json({ error: 'Invalid promptIndex' });
+    }
+
+    if (typeof questionIndex !== 'number' || questionIndex < 0) {
+      return res.status(400).json({ error: 'Invalid questionIndex' });
+    }
+
+    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+
+    const commentStr = typeof comment === 'string' ? comment : '';
+
+    await saveRating(runName, ratingUser, promptIndex, questionIndex, rating, commentStr);
+
+    res.json({
+      success: true,
+      message: 'Rating saved successfully',
+    });
+  } catch (error) {
+    console.error('Error saving rating:', error);
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Unknown error',
     });

@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { listRuns, loadRun } from '@/api/evaluationApi';
+import { Textarea } from '@/components/ui/textarea';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { listRuns, loadRun, loadRatings, saveRating as saveRatingApi } from '@/api/evaluationApi';
+import type { SavedRating } from '@/api/evaluationApi';
 
 interface SavedRun {
   runName: string;
@@ -32,6 +34,8 @@ interface SavedRun {
   };
 }
 
+const RATING_USERS = ['Alejo', 'Jeffrey', 'Guest'];
+
 function ReviewApp() {
   const [availableRuns, setAvailableRuns] = useState<string[]>([]);
   const [selectedRun, setSelectedRun] = useState<string | null>(null);
@@ -40,6 +44,13 @@ function ReviewApp() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Rating state
+  const [ratingUser, setRatingUser] = useState<string>(RATING_USERS[0]);
+  const [currentRating, setCurrentRating] = useState<number>(0);
+  const [currentComment, setCurrentComment] = useState<string>('');
+  const [allRatings, setAllRatings] = useState<SavedRating | null>(null);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Load available runs on mount
   useEffect(() => {
@@ -85,6 +96,131 @@ function ReviewApp() {
 
     loadRunData();
   }, [selectedRun]);
+
+  // Load ratings when run or user changes
+  useEffect(() => {
+    if (!selectedRun || !ratingUser) return;
+
+    const loadRatingsData = async () => {
+      try {
+        const ratings = await loadRatings(selectedRun, ratingUser);
+        setAllRatings(ratings);
+      } catch (err) {
+        console.error('Failed to load ratings:', err);
+        // Initialize empty ratings if none exist
+        setAllRatings({
+          runName: selectedRun,
+          ratingUser,
+          timestamp: Date.now(),
+          ratings: [],
+        });
+      }
+    };
+
+    loadRatingsData();
+  }, [selectedRun, ratingUser]);
+
+  // Update current rating/comment when question or ratings change
+  useEffect(() => {
+    if (!allRatings) {
+      setCurrentRating(0);
+      setCurrentComment('');
+      return;
+    }
+
+    const existingRating = allRatings.ratings.find(
+      r => r.promptIndex === selectedPromptIndex && r.questionIndex === currentQuestionIndex
+    );
+
+    if (existingRating) {
+      setCurrentRating(existingRating.rating);
+      setCurrentComment(existingRating.comment);
+    } else {
+      setCurrentRating(0);
+      setCurrentComment('');
+    }
+  }, [allRatings, selectedPromptIndex, currentQuestionIndex]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    // Don't set up shortcuts if data isn't ready
+    if (!runData || !runData.promptResults || runData.promptResults.length === 0) {
+      return;
+    }
+
+    const totalQuestions = runData.promptResults[selectedPromptIndex]?.results?.length || 0;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts if user is typing in the comment box
+      if (document.activeElement === commentInputRef.current) {
+        // Allow Ctrl+Enter to move to next question even from comment box
+        if (e.ctrlKey && e.key === 'Enter') {
+          e.preventDefault();
+          if (currentQuestionIndex < totalQuestions - 1) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+          }
+        }
+        return;
+      }
+
+      // Number keys 1-5 for rating
+      if (['1', '2', '3', '4', '5'].includes(e.key)) {
+        e.preventDefault();
+        const newRating = parseInt(e.key);
+        if (!selectedRun || !ratingUser) return;
+
+        setCurrentRating(newRating);
+
+        // Save rating to backend
+        saveRatingApi(
+          selectedRun,
+          ratingUser,
+          selectedPromptIndex,
+          currentQuestionIndex,
+          newRating,
+          currentComment
+        ).then(() => {
+          // Update local state
+          if (allRatings) {
+            const updatedRatings = allRatings.ratings.filter(
+              r => !(r.promptIndex === selectedPromptIndex && r.questionIndex === currentQuestionIndex)
+            );
+            updatedRatings.push({
+              promptIndex: selectedPromptIndex,
+              questionIndex: currentQuestionIndex,
+              rating: newRating,
+              comment: currentComment,
+              timestamp: Date.now(),
+            });
+            setAllRatings({
+              ...allRatings,
+              ratings: updatedRatings,
+              timestamp: Date.now(),
+            });
+          }
+        }).catch(err => {
+          console.error('Failed to save rating:', err);
+        });
+      }
+
+      // Enter to focus comment box
+      if (e.key === 'Enter' && !e.ctrlKey) {
+        e.preventDefault();
+        commentInputRef.current?.focus();
+      }
+
+      // Ctrl+Enter to move to next question
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        if (currentQuestionIndex < totalQuestions - 1) {
+          setCurrentQuestionIndex(currentQuestionIndex + 1);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [runData, currentQuestionIndex, selectedPromptIndex, currentComment, currentRating, selectedRun, ratingUser, allRatings]);
 
   if (loading) {
     return (
@@ -137,12 +273,92 @@ function ReviewApp() {
     setCurrentQuestionIndex(0);
   };
 
+  const handleRatingChange = async (newRating: number) => {
+    if (!selectedRun || !ratingUser) return;
+
+    setCurrentRating(newRating);
+
+    // Save rating to backend
+    try {
+      await saveRatingApi(
+        selectedRun,
+        ratingUser,
+        selectedPromptIndex,
+        currentQuestionIndex,
+        newRating,
+        currentComment
+      );
+
+      // Update local state
+      if (allRatings) {
+        const updatedRatings = allRatings.ratings.filter(
+          r => !(r.promptIndex === selectedPromptIndex && r.questionIndex === currentQuestionIndex)
+        );
+        updatedRatings.push({
+          promptIndex: selectedPromptIndex,
+          questionIndex: currentQuestionIndex,
+          rating: newRating,
+          comment: currentComment,
+          timestamp: Date.now(),
+        });
+        setAllRatings({
+          ...allRatings,
+          ratings: updatedRatings,
+          timestamp: Date.now(),
+        });
+      }
+    } catch (err) {
+      console.error('Failed to save rating:', err);
+    }
+  };
+
+  const handleCommentChange = async (newComment: string) => {
+    if (!selectedRun || !ratingUser) return;
+
+    setCurrentComment(newComment);
+
+    // Save rating to backend (only if there's a rating)
+    if (currentRating > 0) {
+      try {
+        await saveRatingApi(
+          selectedRun,
+          ratingUser,
+          selectedPromptIndex,
+          currentQuestionIndex,
+          currentRating,
+          newComment
+        );
+
+        // Update local state
+        if (allRatings) {
+          const updatedRatings = allRatings.ratings.filter(
+            r => !(r.promptIndex === selectedPromptIndex && r.questionIndex === currentQuestionIndex)
+          );
+          updatedRatings.push({
+            promptIndex: selectedPromptIndex,
+            questionIndex: currentQuestionIndex,
+            rating: currentRating,
+            comment: newComment,
+            timestamp: Date.now(),
+          });
+          setAllRatings({
+            ...allRatings,
+            ratings: updatedRatings,
+            timestamp: Date.now(),
+          });
+        }
+      } catch (err) {
+        console.error('Failed to save rating:', err);
+      }
+    }
+  };
+
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="container mx-auto p-0">
       {/* Header with Run Selection */}
       <Card className="mb-6">
         <CardContent className="space-y-4">
-          {/* Run Selection & Prompt Selection on the same row */}
+          {/* Run Selection, Prompt Selection, and Rating User on the same row */}
           <div className="flex flex-col gap-4 md:flex-row md:gap-6">
             <div className="flex-1 min-w-0">
               <label className="block text-sm font-medium mb-2">Evaluation Run</label>
@@ -180,6 +396,22 @@ function ReviewApp() {
                 </Select>
               </div>
             )}
+
+            <div className="flex-1 min-w-0">
+              <label className="block text-sm font-medium mb-2">Rating User</label>
+              <Select value={ratingUser} onValueChange={setRatingUser}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RATING_USERS.map((user) => (
+                    <SelectItem key={user} value={user}>
+                      {user}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           {/* Run Metadata */}
           {runData && (
@@ -225,32 +457,81 @@ function ReviewApp() {
 
       {/* Question and Response */}
       {currentQuestion && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Question */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Question</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{currentQuestion.prompt}</p>
-              <div className="mt-4 flex gap-2">
-                {currentQuestion.cached && (
-                  <Badge variant="secondary">Cached</Badge>
-                )}
-                {currentQuestion.error && (
-                  <Badge variant="destructive">Error</Badge>
-                )}
-                <Badge variant="outline">{currentQuestion.latencyMs}ms</Badge>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex flex-row gap-6">
+          {/* Left Column: Question + Rating */}
+          <div className="w-[500px] space-y-6 flex-initial">
+            {/* Question */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Question</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{currentQuestion.prompt}</p>
+                <div className="mt-4 flex gap-2">
+                  {currentQuestion.cached && (
+                    <Badge variant="secondary">Cached</Badge>
+                  )}
+                  {currentQuestion.error && (
+                    <Badge variant="destructive">Error</Badge>
+                  )}
+                  <Badge variant="outline">{currentQuestion.latencyMs}ms</Badge>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Response */}
-          <Card>
+            {/* Rating Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Rating</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Star Rating */}
+                <div>
+                  <div className="flex items-center gap-1 mb-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => handleRatingChange(star)}
+                        className="transition-colors hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                        aria-label={`Rate ${star} stars`}
+                      >
+                        <Star
+                          className={`h-8 w-8 ${
+                            star <= currentRating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Press 1-5 to rate, Enter to comment, Ctrl+Enter for next question
+                  </p>
+                </div>
+
+                {/* Comment Input */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Comments</label>
+                  <Textarea
+                    ref={commentInputRef}
+                    value={currentComment}
+                    onChange={(e) => handleCommentChange(e.target.value)}
+                    placeholder="Add your comments here..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: Response */}
+          <Card className="flex flex-col flex-1">
             <CardHeader>
               <CardTitle className="text-lg">Response</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               {currentQuestion.error ? (
                 <Alert variant="destructive">
                   <AlertTitle>Error</AlertTitle>

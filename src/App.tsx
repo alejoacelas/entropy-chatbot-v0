@@ -16,10 +16,14 @@ function App() {
 
         <Tabs defaultValue="evaluate" className="w-full">
           <TabsList className="mb-4">
+            <TabsTrigger value="review">Review Results</TabsTrigger>
             <TabsTrigger value="evaluate">Run Evaluation</TabsTrigger>
             <TabsTrigger value="register">Register Prompt</TabsTrigger>
-            <TabsTrigger value="review">Review Results</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="review">
+            <ReviewApp />
+          </TabsContent>
 
           <TabsContent value="evaluate">
             <EvaluationRunner />
@@ -27,10 +31,6 @@ function App() {
 
           <TabsContent value="register">
             <RegisterPrompt />
-          </TabsContent>
-
-          <TabsContent value="review">
-            <ReviewApp />
           </TabsContent>
         </Tabs>
       </div>

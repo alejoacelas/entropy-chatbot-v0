@@ -170,3 +170,59 @@ export async function deletePrompt(promptName: string): Promise<void> {
     throw new Error(`Failed to delete prompt: HTTP ${response.status}`);
   }
 }
+
+export interface QuestionRating {
+  promptIndex: number;
+  questionIndex: number;
+  rating: number;
+  comment: string;
+  timestamp: number;
+}
+
+export interface SavedRating {
+  runName: string;
+  ratingUser: string;
+  timestamp: number;
+  ratings: QuestionRating[];
+}
+
+export async function loadRatings(runName: string, ratingUser: string): Promise<SavedRating> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/ratings/${encodeURIComponent(runName)}/${encodeURIComponent(ratingUser)}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to load ratings: HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function saveRating(
+  runName: string,
+  ratingUser: string,
+  promptIndex: number,
+  questionIndex: number,
+  rating: number,
+  comment: string
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/ratings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      runName,
+      ratingUser,
+      promptIndex,
+      questionIndex,
+      rating,
+      comment,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `HTTP ${response.status}`);
+  }
+}
