@@ -50,8 +50,12 @@ externalPort = 80
 
 [agent]
 expertMode = true
+integrations = ["javascript_object_storage:1.0.0"]
 
 [deployment]
 deploymentTarget = "autoscale"
 run = ["npm", "run", "preview"]
 build = ["npm", "run", "build"]
+
+[nix]
+channel = "stable-25_05"
