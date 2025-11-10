@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import ReactMarkdown from 'react-markdown';
-import { runEvaluation, listDatasets, listPrompts, loadPrompt, type EvaluationResult } from '@/api/evaluationApi';
+import { runEvaluation, listDatasets, listPrompts, type EvaluationResult } from '@/api/evaluationApi';
 import { Upload, Play, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { DEFAULT_MODEL } from '@/constants';
 
@@ -126,11 +126,21 @@ export function EvaluationRunner() {
       }
 
       setResults(allResults);
-      setSummary(response.summary || {
-        total: allResults.length,
-        cached: allResults.filter(r => r.cached).length,
-        errors: allResults.filter(r => r.error).length,
-      });
+      
+      // Convert backend summary format to frontend format
+      if (response.summary) {
+        setSummary({
+          total: response.summary.totalTests || allResults.length,
+          cached: response.summary.cached,
+          errors: response.summary.errors,
+        });
+      } else {
+        setSummary({
+          total: allResults.length,
+          cached: allResults.filter(r => r.cached).length,
+          errors: allResults.filter(r => r.error).length,
+        });
+      }
 
       // Reload datasets list if we just saved a new one
       if (file && datasetName.trim()) {

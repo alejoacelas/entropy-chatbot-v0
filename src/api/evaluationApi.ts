@@ -26,7 +26,8 @@ export interface EvaluationResponse {
   };
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Use relative URLs - Vite proxy will forward /api requests to backend
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export async function runEvaluation(
   file: File | null,
