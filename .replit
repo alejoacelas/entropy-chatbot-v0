@@ -55,7 +55,7 @@ integrations = ["javascript_object_storage:1.0.0"]
 [deployment]
 deploymentTarget = "autoscale"
 run = ["node", "backend/dist/index.js"]
-build = ["bash", "-c", "npm install && npm run build && cd backend && npm install && npm run build"]
+build = ["bash", "-c", "npm install && npm run build && npm install --prefix backend && npm run build --prefix backend"]
 
 [nix]
 channel = "stable-25_05"
