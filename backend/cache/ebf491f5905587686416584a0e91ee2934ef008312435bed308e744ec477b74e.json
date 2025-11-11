@@ -1,0 +1,8 @@
+{
+  "prompt": "How do I set up a new organization?",
+  "response": "# Setting Up a New Organization\n\nTo help you best, I need to know what type of organization you're setting up. Here are the main paths:\n\n## **Business Organization**\n- Choose a business structure (LLC, Corporation, Sole Proprietorship, etc.)\n- Register your business name\n- Get an EIN (Employer Identification Number) from the IRS\n- Register with state/local authorities\n- Open a business bank account\n- Obtain necessary licenses and permits\n\n## **Nonprofit Organization**\n- Define your mission and purpose\n- Choose a name and check availability\n- File articles of incorporation with your state\n- Apply for 501(c)(3) tax-exempt status with the IRS\n- Create bylaws and establish a board of directors\n- Register for state charitable solicitation if needed\n\n## **Team/Group Organization**\n- Define purpose and goals\n- Establish leadership structure\n- Set up communication channels\n- Create guidelines or operating procedures\n- Determine membership criteria\n\n## **Digital/Software Organization**\n- GitHub organization\n- Workspace in collaboration tools (Slack, Microsoft Teams, etc.)\n- Cloud organization (AWS, Google Cloud, Azure)\n\n**Which type are you looking to set up?** I can provide more detailed steps once I know your specific needs.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "be weid",
+  "timestamp": 1762820195470,
+  "latencyMs": 7820
+}

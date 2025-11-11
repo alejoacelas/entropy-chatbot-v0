@@ -1,0 +1,8 @@
+{
+  "prompt": "Hi everyone! Does someone have some good recos/resources around how to think about location-based compensation, and salary bands across different grades?",
+  "response": "# Location-Based Compensation Resources\n\nHere are some helpful resources and frameworks for thinking through geo-based pay:\n\n## Key Resources\n\n**Compensation Data Providers:**\n- **Pave** - Modern comp benchmarking with location adjustments\n- **Radford** (Aon) - Tech industry standard, detailed geo data\n- **Comptryx** - Good for startups/tech\n- **Option Impact** - Equity-focused with location factors\n- **Bureau of Labor Statistics** - Free government data by metro area\n\n**Frameworks & Guides:**\n- GitLab's public compensation calculator (fully transparent methodology)\n- Basecamp's blog posts on their location-independent pay approach\n- Buffer's transparent salary formula (they've shared their thinking publicly)\n\n## Key Considerations\n\n**Philosophy first:**\n- Pay for location of work vs. location of talent market?\n- Single rate vs. tiered zones vs. individualized?\n- Remote-first implications?\n\n**Common approaches:**\n- **SF/NYC = 100%** baseline, then apply cost-of-labor adjustments (typically 0.75-1.0x)\n- **3-5 tier system** (e.g., Tier 1: SF/NYC, Tier 2: Seattle/Boston, Tier 3: Austin/Denver, etc.)\n- **Location-agnostic** (same pay everywhere - simpler but potentially expensive)\n\n**For salary bands:**\n- Typical range spread: 20-30% from min to max within a level\n- Consider: 25th, 50th, 75th percentiles for positioning\n\nWhat's your company size/stage? That affects which approach makes most sense!",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "be weid",
+  "timestamp": 1762820133550,
+  "latencyMs": 12506
+}

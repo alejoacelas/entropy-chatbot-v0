@@ -1,0 +1,8 @@
+{
+  "prompt": "Does anyone know, if an org has an outstanding Google Ads balance and doesn't pay it, what are the consequences?",
+  "response": "# Consequences of Not Paying Google Ads Balance\n\nHere's what typically happens:\n\n## Immediate Consequences\n- **Account suspension** - Your ads stop running immediately once payment fails\n- **Loss of access** - You may lose access to campaign data and historical information\n- **Accruing interest/fees** - Late fees may apply depending on your location and payment terms\n\n## Escalation\n- **Collections** - Google may send the debt to a collections agency\n- **Credit impact** - Unpaid debts sent to collections can damage business/personal credit scores (depending on how the account was set up)\n- **Legal action** - For larger amounts, Google could pursue legal action, though this is less common for smaller balances\n\n## Long-term Issues\n- **Banned from Google Ads** - The organization (and potentially associated individuals) may be permanently banned\n- **Difficulty creating new accounts** - Google tracks business details, payment methods, addresses, etc., making it hard to open new accounts\n- **Impact on other Google services** - Could potentially affect other Google business services\n\n## Important Notes\n- The severity often depends on the **amount owed**\n- If you're having payment issues, **contact Google Ads support immediately** - they may offer payment plans or solutions\n- Simply abandoning the debt is generally not advisable\n\n**Have you tried reaching out to Google Ads billing support about the situation?** They're often more flexible than people expect.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "be weid",
+  "timestamp": 1762820160743,
+  "latencyMs": 10604
+}
