@@ -1,0 +1,8 @@
+{
+  "prompt": "What is the difference between advocacy and lobbying? (when it comes to fiscal sponsorship)",
+  "response": "# Advocacy vs. Lobbying in Fiscal Sponsorship\n\n## Key Differences\n\n**Advocacy** (generally unrestricted for 501(c)(3)s):\n- Educating the public about issues\n- Raising awareness of problems\n- Encouraging civic participation\n- Presenting research and policy analysis\n- Building coalitions around causes\n- **Does NOT** include asking for specific legislative action\n\n**Lobbying** (restricted for 501(c)(3)s):\n- Attempting to influence specific legislation\n- Asking legislators to vote yes/no on a bill\n- Urging the public to contact legislators about specific legislation\n- Taking a position on ballot measures\n- **IS** regulated and limited by the IRS\n\n## Why It Matters for Fiscal Sponsorship\n\n**501(c)(3) organizations face lobbying limits:**\n- Must keep lobbying as an \"insubstantial\" part of activities (typically <5-20% depending on election)\n- Can elect \"501(h) expenditure test\" for clearer limits\n- Excessive lobbying can jeopardize tax-exempt status\n\n**Implications for sponsored projects:**\n- The fiscal sponsor's lobbying limits apply to ALL projects under their umbrella\n- Projects doing significant lobbying can put the sponsor at risk\n- Many fiscal sponsors prohibit or strictly limit lobbying by sponsored projects\n- Some sponsors track and aggregate all lobbying across projects\n\n## Bottom Line\n\nIf your project plans to lobby, discuss this upfront with potential fiscal sponsors. Some won't allow it; others have systems to accommodate limited lobbying within IRS rules.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "be weid",
+  "timestamp": 1762820067981,
+  "latencyMs": 11643
+}
