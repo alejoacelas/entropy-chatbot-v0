@@ -38,7 +38,7 @@ if (process.env.REPLIT_DEPLOYMENT) {
 }
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`AI Evaluation Backend running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`Evaluation endpoint: http://localhost:${PORT}/api/evaluate`);
@@ -50,3 +50,10 @@ app.listen(PORT, '0.0.0.0', () => {
   // Initialize storage to trigger environment detection log
   StorageFactory.getStorage();
 });
+
+// Set timeout to 30 minutes (1800000 ms) for long-running evaluations
+server.timeout = 1800000;
+server.keepAliveTimeout = 1800000;
+server.headersTimeout = 1810000;
+
+console.log('Server timeouts configured: 30 minutes for long-running evaluations');

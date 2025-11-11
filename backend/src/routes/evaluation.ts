@@ -37,6 +37,10 @@ const upload = multer({
  * }
  */
 router.post('/evaluate', upload.single('file'), async (req, res) => {
+  // Set timeout to 30 minutes for this specific endpoint
+  req.setTimeout(1800000);
+  res.setTimeout(1800000);
+  
   try {
     let datasetPrompts: string[] = [];
     let datasetName = '';
