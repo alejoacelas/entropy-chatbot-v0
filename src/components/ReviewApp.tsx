@@ -229,21 +229,23 @@ function ReviewApp() {
         handleNextQuestion();
       }
 
-      // Up/Down: Previous/next evaluation prompt
+      // Up/Down: Previous/next evaluation prompt (with cycling)
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (selectedPromptIndex > 0) {
-          setSelectedPromptIndex(selectedPromptIndex - 1);
-          setCurrentQuestionIndex(0);
-        }
+        const newIndex = selectedPromptIndex > 0 
+          ? selectedPromptIndex - 1 
+          : runData.promptResults.length - 1;
+        setSelectedPromptIndex(newIndex);
+        setCurrentQuestionIndex(0);
       }
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (selectedPromptIndex < runData.promptResults.length - 1) {
-          setSelectedPromptIndex(selectedPromptIndex + 1);
-          setCurrentQuestionIndex(0);
-        }
+        const newIndex = selectedPromptIndex < runData.promptResults.length - 1
+          ? selectedPromptIndex + 1
+          : 0;
+        setSelectedPromptIndex(newIndex);
+        setCurrentQuestionIndex(0);
       }
     };
 
