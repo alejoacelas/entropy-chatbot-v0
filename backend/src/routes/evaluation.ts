@@ -5,7 +5,7 @@ import { parsePromptsFromCsv } from '../utils/csvParser.js';
 import { saveRun, listRuns, loadRun } from '../utils/runStorage.js';
 import { saveDataset, listDatasets, loadDataset } from '../utils/datasetStorage.js';
 import { savePrompt, listPrompts, loadPrompt, deletePrompt } from '../utils/promptStorage.js';
-import { loadRatings, saveRating } from '../utils/ratingStorage.js';
+import { loadRating, saveRating } from '../utils/ratingStorage.js';
 
 const router = express.Router();
 const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
@@ -426,26 +426,30 @@ router.post('/ratings/load', async (req, res) => {
  * POST /api/ratings
  *
  * Saves a rating for a specific question
- * Body: { runName: string, ratingUser: string, promptIndex: number, questionIndex: number, rating: number, comment: string }
+ * Body: { model: string, systemPrompt: string, question: string, response: string, ratingUser: string, rating: number, comment: string }
  */
 router.post('/ratings', async (req, res) => {
   try {
-    const { runName, ratingUser, promptIndex, questionIndex, rating, comment } = req.body;
+    const { model, systemPrompt, question, response, ratingUser, rating, comment } = req.body;
 
-    if (!runName || typeof runName !== 'string') {
-      return res.status(400).json({ error: 'runName is required' });
+    if (!model || typeof model !== 'string') {
+      return res.status(400).json({ error: 'model is required' });
+    }
+
+    if (!systemPrompt || typeof systemPrompt !== 'string') {
+      return res.status(400).json({ error: 'systemPrompt is required' });
+    }
+
+    if (!question || typeof question !== 'string') {
+      return res.status(400).json({ error: 'question is required' });
+    }
+
+    if (!response || typeof response !== 'string') {
+      return res.status(400).json({ error: 'response is required' });
     }
 
     if (!ratingUser || typeof ratingUser !== 'string') {
       return res.status(400).json({ error: 'ratingUser is required' });
-    }
-
-    if (typeof promptIndex !== 'number' || promptIndex < 0) {
-      return res.status(400).json({ error: 'Invalid promptIndex' });
-    }
-
-    if (typeof questionIndex !== 'number' || questionIndex < 0) {
-      return res.status(400).json({ error: 'Invalid questionIndex' });
     }
 
     if (typeof rating !== 'number' || rating < 1 || rating > 5) {
@@ -454,7 +458,7 @@ router.post('/ratings', async (req, res) => {
 
     const commentStr = typeof comment === 'string' ? comment : '';
 
-    await saveRating(runName, ratingUser, promptIndex, questionIndex, rating, commentStr);
+    await saveRating(model, systemPrompt, question, response, ratingUser, rating, commentStr);
 
     res.json({
       success: true,

@@ -173,57 +173,77 @@ export async function deletePrompt(promptName: string): Promise<void> {
 }
 
 export interface QuestionRating {
-  promptIndex: number;
-  questionIndex: number;
+  model: string;
+  systemPrompt: string;
+  question: string;
+  response: string;
   rating: number;
   comment: string;
   timestamp: number;
 }
 
 export interface SavedRating {
-  runName: string;
+  contentHash: string;
   ratingUser: string;
   timestamp: number;
-  ratings: QuestionRating[];
+  rating: QuestionRating;
 }
 
-export async function loadRatings(runName: string, ratingUser: string): Promise<SavedRating> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/ratings/${encodeURIComponent(runName)}/${encodeURIComponent(ratingUser)}`
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to load ratings: HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-
-export async function saveRating(
-  runName: string,
-  ratingUser: string,
-  promptIndex: number,
-  questionIndex: number,
-  rating: number,
-  comment: string
-): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/ratings`, {
+export async function loadRating(
+  model: string,
+  systemPrompt: string,
+  question: string,
+  response: string,
+  ratingUser: string
+): Promise<SavedRating | null> {
+  const apiResponse = await fetch(`${API_BASE_URL}/api/ratings/load`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      runName,
+      model,
+      systemPrompt,
+      question,
+      response,
       ratingUser,
-      promptIndex,
-      questionIndex,
+    }),
+  });
+
+  if (!apiResponse.ok) {
+    throw new Error(`Failed to load rating: HTTP ${apiResponse.status}`);
+  }
+
+  return apiResponse.json();
+}
+
+export async function saveRating(
+  model: string,
+  systemPrompt: string,
+  question: string,
+  response: string,
+  ratingUser: string,
+  rating: number,
+  comment: string
+): Promise<void> {
+  const apiResponse = await fetch(`${API_BASE_URL}/api/ratings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      systemPrompt,
+      question,
+      response,
+      ratingUser,
       rating,
       comment,
     }),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || `HTTP ${response.status}`);
+  if (!apiResponse.ok) {
+    const errorData = await apiResponse.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `HTTP ${apiResponse.status}`);
   }
 }

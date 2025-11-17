@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, ChevronRight, Star, Download } from 'lucide-react';
-import { listRuns, loadRun, loadRatings, saveRating as saveRatingApi } from '@/api/evaluationApi';
+import { listRuns, loadRun, loadRating, saveRating as saveRatingApi } from '@/api/evaluationApi';
 import type { SavedRating } from '@/api/evaluationApi';
 
 interface SavedRun {
@@ -49,7 +49,7 @@ function ReviewApp() {
   const [ratingUser, setRatingUser] = useState<string>(RATING_USERS[0]);
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [currentComment, setCurrentComment] = useState<string>('');
-  const [allRatings, setAllRatings] = useState<SavedRating | null>(null);
+  const [currentSavedRating, setCurrentSavedRating] = useState<SavedRating | null>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Load available runs on mount
@@ -97,49 +97,45 @@ function ReviewApp() {
     loadRunData();
   }, [selectedRun]);
 
-  // Load ratings when run or user changes
+  // Load rating when question, prompt, or user changes
   useEffect(() => {
-    if (!selectedRun || !ratingUser) return;
+    if (!runData || !ratingUser) return;
 
-    const loadRatingsData = async () => {
+    const currentPromptResult = runData.promptResults[selectedPromptIndex];
+    if (!currentPromptResult) return;
+
+    const currentQuestion = currentPromptResult.results[currentQuestionIndex];
+    if (!currentQuestion) return;
+
+    const loadCurrentRating = async () => {
       try {
-        const ratings = await loadRatings(selectedRun, ratingUser);
-        setAllRatings(ratings);
+        const rating = await loadRating(
+          runData.model,
+          currentPromptResult.promptContent,
+          currentQuestion.prompt,
+          currentQuestion.response,
+          ratingUser
+        );
+
+        setCurrentSavedRating(rating);
+
+        if (rating && rating.rating) {
+          setCurrentRating(rating.rating.rating);
+          setCurrentComment(rating.rating.comment);
+        } else {
+          setCurrentRating(0);
+          setCurrentComment('');
+        }
       } catch (err) {
-        console.error('Failed to load ratings:', err);
-        // Initialize empty ratings if none exist
-        setAllRatings({
-          runName: selectedRun,
-          ratingUser,
-          timestamp: Date.now(),
-          ratings: [],
-        });
+        console.error('Failed to load rating:', err);
+        setCurrentSavedRating(null);
+        setCurrentRating(0);
+        setCurrentComment('');
       }
     };
 
-    loadRatingsData();
-  }, [selectedRun, ratingUser]);
-
-  // Update current rating/comment when question or ratings change
-  useEffect(() => {
-    if (!allRatings) {
-      setCurrentRating(0);
-      setCurrentComment('');
-      return;
-    }
-
-    const existingRating = allRatings.ratings.find(
-      r => r.promptIndex === selectedPromptIndex && r.questionIndex === currentQuestionIndex
-    );
-
-    if (existingRating) {
-      setCurrentRating(existingRating.rating);
-      setCurrentComment(existingRating.comment);
-    } else {
-      setCurrentRating(0);
-      setCurrentComment('');
-    }
-  }, [allRatings, selectedPromptIndex, currentQuestionIndex]);
+    loadCurrentRating();
+  }, [runData, selectedPromptIndex, currentQuestionIndex, ratingUser]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -167,37 +163,24 @@ function ReviewApp() {
       if (['1', '2', '3', '4', '5'].includes(e.key)) {
         e.preventDefault();
         const newRating = parseInt(e.key);
-        if (!selectedRun || !ratingUser) return;
+        if (!ratingUser || !runData) return;
+
+        const currentPromptResult = runData.promptResults[selectedPromptIndex];
+        const currentQuestion = currentPromptResult.results[currentQuestionIndex];
 
         setCurrentRating(newRating);
 
         // Save rating to backend
         saveRatingApi(
-          selectedRun,
+          runData.model,
+          currentPromptResult.promptContent,
+          currentQuestion.prompt,
+          currentQuestion.response,
           ratingUser,
-          selectedPromptIndex,
-          currentQuestionIndex,
           newRating,
           currentComment
         ).then(() => {
-          // Update local state
-          if (allRatings) {
-            const updatedRatings = allRatings.ratings.filter(
-              r => !(r.promptIndex === selectedPromptIndex && r.questionIndex === currentQuestionIndex)
-            );
-            updatedRatings.push({
-              promptIndex: selectedPromptIndex,
-              questionIndex: currentQuestionIndex,
-              rating: newRating,
-              comment: currentComment,
-              timestamp: Date.now(),
-            });
-            setAllRatings({
-              ...allRatings,
-              ratings: updatedRatings,
-              timestamp: Date.now(),
-            });
-          }
+          // Rating saved successfully
         }).catch(err => {
           console.error('Failed to save rating:', err);
         });
@@ -245,7 +228,7 @@ function ReviewApp() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [runData, currentQuestionIndex, selectedPromptIndex, currentComment, currentRating, selectedRun, ratingUser, allRatings]);
+  }, [runData, currentQuestionIndex, selectedPromptIndex, currentComment, currentRating, ratingUser]);
 
   if (loading) {
     return (
@@ -299,39 +282,24 @@ function ReviewApp() {
   };
 
   const handleRatingChange = async (newRating: number) => {
-    if (!selectedRun || !ratingUser) return;
+    if (!runData || !ratingUser) return;
+
+    const currentPromptResult = runData.promptResults[selectedPromptIndex];
+    const currentQuestion = currentPromptResult.results[currentQuestionIndex];
 
     setCurrentRating(newRating);
 
     // Save rating to backend
     try {
       await saveRatingApi(
-        selectedRun,
+        runData.model,
+        currentPromptResult.promptContent,
+        currentQuestion.prompt,
+        currentQuestion.response,
         ratingUser,
-        selectedPromptIndex,
-        currentQuestionIndex,
         newRating,
         currentComment
       );
-
-      // Update local state
-      if (allRatings) {
-        const updatedRatings = allRatings.ratings.filter(
-          r => !(r.promptIndex === selectedPromptIndex && r.questionIndex === currentQuestionIndex)
-        );
-        updatedRatings.push({
-          promptIndex: selectedPromptIndex,
-          questionIndex: currentQuestionIndex,
-          rating: newRating,
-          comment: currentComment,
-          timestamp: Date.now(),
-        });
-        setAllRatings({
-          ...allRatings,
-          ratings: updatedRatings,
-          timestamp: Date.now(),
-        });
-      }
     } catch (err) {
       console.error('Failed to save rating:', err);
     }
