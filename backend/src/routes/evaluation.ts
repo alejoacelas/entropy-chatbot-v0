@@ -382,24 +382,40 @@ router.delete('/prompts/:name', async (req, res) => {
 });
 
 /**
- * GET /api/ratings/:runName/:ratingUser
+ * POST /api/ratings/load
  *
- * Returns: All ratings for a specific run and user
+ * Returns: Rating for a specific content and user
+ * Body: { model: string, systemPrompt: string, question: string, response: string, ratingUser: string }
  */
-router.get('/ratings/:runName/:ratingUser', async (req, res) => {
+router.post('/ratings/load', async (req, res) => {
   try {
-    const { runName, ratingUser } = req.params;
-    const ratings = await loadRatings(runName, ratingUser);
+    const { model, systemPrompt, question, response, ratingUser } = req.body;
 
-    if (!ratings) {
-      return res.status(404).json({
-        error: `Ratings not found for run: ${runName}, user: ${ratingUser}`,
-      });
+    if (!model || typeof model !== 'string') {
+      return res.status(400).json({ error: 'model is required' });
     }
 
-    res.json(ratings);
+    if (!systemPrompt || typeof systemPrompt !== 'string') {
+      return res.status(400).json({ error: 'systemPrompt is required' });
+    }
+
+    if (!question || typeof question !== 'string') {
+      return res.status(400).json({ error: 'question is required' });
+    }
+
+    if (!response || typeof response !== 'string') {
+      return res.status(400).json({ error: 'response is required' });
+    }
+
+    if (!ratingUser || typeof ratingUser !== 'string') {
+      return res.status(400).json({ error: 'ratingUser is required' });
+    }
+
+    const rating = await loadRating(model, systemPrompt, question, response, ratingUser);
+
+    res.json(rating);
   } catch (error) {
-    console.error('Error loading ratings:', error);
+    console.error('Error loading rating:', error);
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Unknown error',
     });

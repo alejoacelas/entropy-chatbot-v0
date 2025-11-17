@@ -1,18 +1,21 @@
+import { createHash } from 'crypto';
 import { StorageFactory } from '../storage/index.js';
 
 export interface QuestionRating {
-  promptIndex: number;
-  questionIndex: number;
+  model: string;
+  systemPrompt: string;
+  question: string;
+  response: string;
   rating: number; // 1-5
   comment: string;
   timestamp: number;
 }
 
 export interface SavedRating {
-  runName: string;
+  contentHash: string;
   ratingUser: string;
   timestamp: number;
-  ratings: QuestionRating[];
+  rating: QuestionRating;
 }
 
 // Sanitize string for use in filename
@@ -20,89 +23,74 @@ function sanitize(str: string): string {
   return str.replace(/[^a-zA-Z0-9-_]/g, '_');
 }
 
-// Get rating storage key
-function getRatingKey(runName: string, ratingUser: string): string {
-  const sanitizedRun = sanitize(runName);
-  const sanitizedUser = sanitize(ratingUser);
-  return `ratings/${sanitizedRun}_${sanitizedUser}.json`;
+// Generate content hash from model, system prompt, question, and response
+export function generateContentHash(
+  model: string,
+  systemPrompt: string,
+  question: string,
+  response: string
+): string {
+  const hash = createHash('sha256');
+  hash.update(`${model}|${systemPrompt}|${question}|${response}`);
+  return hash.digest('hex');
 }
 
-// Load ratings for a specific run and user
-export async function loadRatings(
-  runName: string,
+// Get rating storage key
+function getRatingKey(contentHash: string, ratingUser: string): string {
+  const sanitizedUser = sanitize(ratingUser);
+  return `ratings/${contentHash}_${sanitizedUser}.json`;
+}
+
+// Load rating for a specific content and user
+export async function loadRating(
+  model: string,
+  systemPrompt: string,
+  question: string,
+  response: string,
   ratingUser: string
 ): Promise<SavedRating | null> {
   const storage = StorageFactory.getStorage();
-  const key = getRatingKey(runName, ratingUser);
+  const contentHash = generateContentHash(model, systemPrompt, question, response);
+  const key = getRatingKey(contentHash, ratingUser);
 
   try {
     const data = await storage.load<SavedRating>(key);
-    if (data) {
-      return data;
-    }
-    // Return empty ratings if file doesn't exist
-    return {
-      runName,
-      ratingUser,
-      timestamp: Date.now(),
-      ratings: [],
-    };
+    return data || null;
   } catch (error) {
-    // Return empty ratings if file doesn't exist
-    return {
-      runName,
-      ratingUser,
-      timestamp: Date.now(),
-      ratings: [],
-    };
+    // Return null if file doesn't exist
+    return null;
   }
 }
 
 // Save a single rating for a question
 export async function saveRating(
-  runName: string,
+  model: string,
+  systemPrompt: string,
+  question: string,
+  response: string,
   ratingUser: string,
-  promptIndex: number,
-  questionIndex: number,
   rating: number,
   comment: string
 ): Promise<void> {
   const storage = StorageFactory.getStorage();
+  const contentHash = generateContentHash(model, systemPrompt, question, response);
 
-  // Load existing ratings
-  const existing = await loadRatings(runName, ratingUser);
-
-  if (!existing) {
-    throw new Error('Failed to load existing ratings');
-  }
-
-  // Remove existing rating for this question if present
-  existing.ratings = existing.ratings.filter(
-    r => !(r.promptIndex === promptIndex && r.questionIndex === questionIndex)
-  );
-
-  // Add new rating
-  existing.ratings.push({
-    promptIndex,
-    questionIndex,
-    rating,
-    comment,
+  const savedRating: SavedRating = {
+    contentHash,
+    ratingUser,
     timestamp: Date.now(),
-  });
+    rating: {
+      model,
+      systemPrompt,
+      question,
+      response,
+      rating,
+      comment,
+      timestamp: Date.now(),
+    },
+  };
 
-  existing.timestamp = Date.now();
-
-  const key = getRatingKey(runName, ratingUser);
-  await storage.save(key, existing);
+  const key = getRatingKey(contentHash, ratingUser);
+  await storage.save(key, savedRating);
 }
 
-// Get rating for a specific question
-export function getRating(
-  savedRating: SavedRating,
-  promptIndex: number,
-  questionIndex: number
-): QuestionRating | undefined {
-  return savedRating.ratings.find(
-    r => r.promptIndex === promptIndex && r.questionIndex === questionIndex
-  );
-}
