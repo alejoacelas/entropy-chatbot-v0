@@ -574,6 +574,9 @@ function ReviewApp() {
                   <p className="text-xs text-muted-foreground">
                     Press 1-5 to rate, Enter to comment, Ctrl+Enter for next question
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    Use the arrow keys to navigate between questions and prompts.
+                  </p>
                 </div>
 
                 {/* Comment Input */}
