@@ -216,6 +216,35 @@ function ReviewApp() {
           setCurrentQuestionIndex(currentQuestionIndex + 1);
         }
       }
+
+      // Arrow key navigation
+      // Left/Right: Previous/next test case (question)
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrevQuestion();
+      }
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleNextQuestion();
+      }
+
+      // Up/Down: Previous/next evaluation prompt
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (selectedPromptIndex > 0) {
+          setSelectedPromptIndex(selectedPromptIndex - 1);
+          setCurrentQuestionIndex(0);
+        }
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (selectedPromptIndex < runData.promptResults.length - 1) {
+          setSelectedPromptIndex(selectedPromptIndex + 1);
+          setCurrentQuestionIndex(0);
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
