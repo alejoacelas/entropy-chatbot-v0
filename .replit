@@ -53,6 +53,10 @@ localPort = 42667
 externalPort = 3000
 exposeLocalhost = true
 
+[[ports]]
+localPort = 44029
+externalPort = 3002
+
 [agent]
 expertMode = true
 integrations = ["javascript_object_storage:1.0.0"]
