@@ -234,14 +234,12 @@ function ReviewApp() {
         e.preventDefault();
         const newIndex = (selectedPromptIndex - 1 + runData.promptResults.length) % runData.promptResults.length;
         setSelectedPromptIndex(newIndex);
-        setCurrentQuestionIndex(0);
       }
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         const newIndex = (selectedPromptIndex + 1) % runData.promptResults.length;
         setSelectedPromptIndex(newIndex);
-        setCurrentQuestionIndex(0);
       }
     };
 
