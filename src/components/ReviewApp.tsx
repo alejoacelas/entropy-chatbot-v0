@@ -8,7 +8,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, ChevronRight, Star, Download } from 'lucide-react';
 import { listRuns, loadRun, loadRating, saveRating as saveRatingApi } from '@/api/evaluationApi';
-import type { SavedRating } from '@/api/evaluationApi';
 
 interface SavedRun {
   runName: string;
@@ -49,7 +48,6 @@ function ReviewApp() {
   const [ratingUser, setRatingUser] = useState<string>(RATING_USERS[0]);
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [currentComment, setCurrentComment] = useState<string>('');
-  const [currentSavedRating, setCurrentSavedRating] = useState<SavedRating | null>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Load available runs on mount
@@ -117,8 +115,6 @@ function ReviewApp() {
           ratingUser
         );
 
-        setCurrentSavedRating(rating);
-
         if (rating && rating.rating) {
           setCurrentRating(rating.rating.rating);
           setCurrentComment(rating.rating.comment);
@@ -128,7 +124,6 @@ function ReviewApp() {
         }
       } catch (err) {
         console.error('Failed to load rating:', err);
-        setCurrentSavedRating(null);
         setCurrentRating(0);
         setCurrentComment('');
       }
@@ -306,7 +301,10 @@ function ReviewApp() {
   };
 
   const handleCommentChange = async (newComment: string) => {
-    if (!selectedRun || !ratingUser) return;
+    if (!runData || !ratingUser) return;
+
+    const currentPromptResult = runData.promptResults[selectedPromptIndex];
+    const currentQuestion = currentPromptResult.results[currentQuestionIndex];
 
     setCurrentComment(newComment);
 
@@ -314,32 +312,14 @@ function ReviewApp() {
     if (currentRating > 0) {
       try {
         await saveRatingApi(
-          selectedRun,
+          runData.model,
+          currentPromptResult.promptContent,
+          currentQuestion.prompt,
+          currentQuestion.response,
           ratingUser,
-          selectedPromptIndex,
-          currentQuestionIndex,
           currentRating,
           newComment
         );
-
-        // Update local state
-        if (allRatings) {
-          const updatedRatings = allRatings.ratings.filter(
-            r => !(r.promptIndex === selectedPromptIndex && r.questionIndex === currentQuestionIndex)
-          );
-          updatedRatings.push({
-            promptIndex: selectedPromptIndex,
-            questionIndex: currentQuestionIndex,
-            rating: currentRating,
-            comment: newComment,
-            timestamp: Date.now(),
-          });
-          setAllRatings({
-            ...allRatings,
-            ratings: updatedRatings,
-            timestamp: Date.now(),
-          });
-        }
       } catch (err) {
         console.error('Failed to save rating:', err);
       }
@@ -348,24 +328,6 @@ function ReviewApp() {
 
   const handleExportToCSV = async () => {
     if (!runData || !selectedRun) return;
-
-    // Load all ratings for all users
-    const allUserRatings: Record<string, SavedRating> = {};
-    for (const user of RATING_USERS) {
-      try {
-        const ratings = await loadRatings(selectedRun, user);
-        allUserRatings[user] = ratings;
-      } catch (err) {
-        console.log(`No ratings found for user ${user}`);
-        // User may not have rated anything yet
-        allUserRatings[user] = {
-          runName: selectedRun,
-          ratingUser: user,
-          timestamp: Date.now(),
-          ratings: [],
-        };
-      }
-    }
 
     // Build CSV headers
     const headers = ['Question'];
@@ -392,7 +354,7 @@ function ReviewApp() {
       row.push(escapeCSV(question));
 
       // For each prompt, add response and ratings
-      runData.promptResults.forEach((pr, promptIndex) => {
+      for (const pr of runData.promptResults) {
         const result = pr.results[questionIndex];
 
         // Add response
@@ -400,16 +362,25 @@ function ReviewApp() {
         row.push(escapeCSV(result.error || ''));
 
         // Add ratings from all users
-        RATING_USERS.forEach((user) => {
-          const userRatings = allUserRatings[user];
-          const rating = userRatings?.ratings.find(
-            r => r.promptIndex === promptIndex && r.questionIndex === questionIndex
-          );
+        for (const user of RATING_USERS) {
+          try {
+            const rating = await loadRating(
+              runData.model,
+              pr.promptContent,
+              result.prompt,
+              result.response,
+              user
+            );
 
-          row.push(rating?.rating.toString() || '');
-          row.push(escapeCSV(rating?.comment || ''));
-        });
-      });
+            row.push(rating?.rating?.rating.toString() || '');
+            row.push(escapeCSV(rating?.rating?.comment || ''));
+          } catch (err) {
+            // No rating found
+            row.push('');
+            row.push('');
+          }
+        }
+      }
 
       rows.push(row);
     }

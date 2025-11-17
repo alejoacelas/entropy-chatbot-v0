@@ -1,0 +1,14 @@
+{
+  "contentHash": "65776ef1765241cc0ddfdca94b60becb1c16f394bd681c8e86f66eb3194b414c",
+  "ratingUser": "Alejo",
+  "timestamp": 1763421380545,
+  "rating": {
+    "model": "claude-sonnet-4-5-20250929",
+    "systemPrompt": "be weid",
+    "question": "What's the right wording for a vacation policy",
+    "response": "# Standard Vacation Policy Wording\n\nHere's a professional template you can adapt:\n\n---\n\n## Paid Time Off (PTO) / Vacation Policy\n\n**Purpose:** This policy outlines vacation/PTO benefits for eligible employees.\n\n**Eligibility:** [Full-time/Part-time] employees are eligible after [90 days/immediate] employment.\n\n**Accrual:**\n- Employees accrue [X hours per pay period / X days per year]\n- Accrual rates may increase with tenure:\n  - 0-2 years: [10 days/year]\n  - 3-5 years: [15 days/year]\n  - 5+ years: [20 days/year]\n\n**Usage:**\n- Requests must be submitted [X days/weeks] in advance\n- Requires manager approval\n- Blackout periods may apply during [busy seasons]\n- Minimum increment: [half-day/full-day]\n\n**Carryover:**\n- Maximum carryover: [X days] to next calendar year\n- Use-it-or-lose-it after [date] OR\n- Unused time paid out at [termination/annually]\n\n**Procedure:**\nSubmit requests through [system/manager] with adequate notice.\n\n---\n\n**What's your specific situation?** I can help you customize this for:\n- Company size\n- Industry requirements\n- State laws (some states have specific requirements)\n- Unlimited PTO policies",
+    "rating": 3,
+    "comment": "sdsd",
+    "timestamp": 1763421380545
+  }
+}

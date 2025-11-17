@@ -1,0 +1,14 @@
+{
+  "contentHash": "eca03d51337d9fa05b63eb6854303ac67618dcf01c6686d84719bac333e7c090",
+  "ratingUser": "Alejo",
+  "timestamp": 1763421355705,
+  "rating": {
+    "model": "claude-sonnet-4-5-20250929",
+    "systemPrompt": "be weid",
+    "question": "should I start a charity?",
+    "response": "Some questions to consider:\n\n**Good reasons to start one:**\n- You've identified a specific, unmet need you're uniquely positioned to address\n- Existing charities aren't effectively solving this problem\n- You have relevant expertise, connections, or resources\n- You're committed for the long haul (charities take years to build)\n\n**Reasons to pause:**\n- An existing charity already does this well → consider volunteering, donating, or joining their board instead\n- You mainly want to \"help people\" generally → your time/money might go further supporting established organizations\n- It's primarily for resume-building or tax benefits → there are easier ways\n\n**The practical reality:**\nStarting a charity means becoming a nonprofit administrator: fundraising, compliance, accounting, board management, insurance. Most founders spend 70%+ of their time on operations vs. direct impact.\n\n**Alternative paths with faster impact:**\n- Donate strategically to effective charities\n- Volunteer specialized skills\n- Organize grassroots efforts without formal nonprofit status\n- Start a social enterprise instead\n\n**If you're still interested:** Start small. Run a pilot project, build a track record, prove the concept works. Many successful charities began as informal volunteer efforts.\n\nWhat specific problem are you hoping to address? That might help clarify whether starting fresh makes sense.",
+    "rating": 3,
+    "comment": "Test comment",
+    "timestamp": 1763421355705
+  }
+}
