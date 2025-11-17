@@ -232,18 +232,14 @@ function ReviewApp() {
       // Up/Down: Previous/next evaluation prompt (with cycling)
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        const newIndex = selectedPromptIndex > 0 
-          ? selectedPromptIndex - 1 
-          : runData.promptResults.length - 1;
+        const newIndex = (selectedPromptIndex - 1 + runData.promptResults.length) % runData.promptResults.length;
         setSelectedPromptIndex(newIndex);
         setCurrentQuestionIndex(0);
       }
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        const newIndex = selectedPromptIndex < runData.promptResults.length - 1
-          ? selectedPromptIndex + 1
-          : 0;
+        const newIndex = (selectedPromptIndex + 1) % runData.promptResults.length;
         setSelectedPromptIndex(newIndex);
         setCurrentQuestionIndex(0);
       }
