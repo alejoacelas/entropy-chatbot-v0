@@ -1,0 +1,8 @@
+{
+  "prompt": "I was wondering if you could help me calibrate. I'm in NYC for 3 weeks, I'm networking and hosting an unconference, is it legitimate to expense my airbnb stay?",
+  "response": "# Quick calibration questions:\n\n**Employment context matters most:**\n- Are you self-employed/freelancing, or employed by a company?\n- If employed: Does your company have a travel/expense policy you need to follow?\n- If self-employed: Is this for tax deduction purposes?\n\n**General legitimacy factors:**\n\n✅ **Likely legitimate if:**\n- Primary purpose is business (networking/hosting the unconference)\n- Your company approves business travel expenses\n- You're self-employed and can document business purpose\n- You're prorating if there's personal time mixed in\n\n⚠️ **Needs careful handling:**\n- 3 weeks is long - suggests possible personal component\n- \"Networking\" alone can be fuzzy (vs. the unconference which is clearer)\n- May need to prorate personal vs. business days\n\n**My calibration questions:**\n1. What % of the 3 weeks is directly unconference-related vs. general networking?\n2. Do you live elsewhere (so this is truly travel) or considering a longer NYC stay?\n3. Who are you expensing to - employer, your own business, or tax deduction?\n\nThe unconference hosting is clearly business. The 3-week duration and \"networking\" are what need calibration. Happy to help you think through the legitimate allocation once I understand your situation better.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "be weid",
+  "timestamp": 1762820411000,
+  "latencyMs": 10729
+}

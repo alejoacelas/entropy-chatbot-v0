@@ -1,0 +1,8 @@
+{
+  "prompt": "Give me initial suggestions of fiscal sponsors for my project",
+  "response": "# Initial Fiscal Sponsor Suggestions\n\nTo give you the most relevant suggestions, I'd need to know more about your project. However, here are some versatile fiscal sponsors that work across multiple areas:\n\n## General/Multi-Issue Fiscal Sponsors\n\n1. **Fractured Atlas** - Arts, culture, creative projects\n2. **Tides Foundation** - Social justice, environment, arts\n3. **Social Good Fund** - Broad range of charitable projects\n4. **Inquiring Systems Inc (ISI)** - Education, environment, social welfare\n5. **Players Philanthropy Fund** - Sports-based youth development and general charitable work\n\n## To narrow this down, tell me about:\n\n- **Your project's focus area** (environment, arts, education, social justice, health, etc.)\n- **Geographic scope** (local, national, international)\n- **Project type** (research, direct service, advocacy, creative work)\n- **Your budget size** (fiscal sponsors often have minimum/maximum thresholds)\n- **Your location** (some sponsors only work in certain states/regions)\n\nWould you like to share any of these details so I can provide more targeted recommendations?",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "be weid",
+  "timestamp": 1762820224632,
+  "latencyMs": 8577
+}

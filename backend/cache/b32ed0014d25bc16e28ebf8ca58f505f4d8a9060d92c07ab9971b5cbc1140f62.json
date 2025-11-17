@@ -1,0 +1,8 @@
+{
+  "prompt": "Is there are SparkWell template for last receipts?",
+  "response": "# SparkWell Receipt Template\n\nI don't have access to SparkWell's specific template library or documentation, so I can't confirm if they have a dedicated \"last receipts\" template.\n\nHowever, here are some ways to find out:\n\n## How to Check for SparkWell Templates:\n\n1. **Check their documentation** - Look in SparkWell's official docs or template gallery\n2. **Contact support** - Reach out to SparkWell's customer support team\n3. **Check the dashboard** - Look in your SparkWell account under Templates or Reports sections\n4. **Community forums** - Check if other SparkWell users have shared templates\n\n## What You Might Be Looking For:\n\nIf you're trying to display recent receipts, you might need:\n- **Transaction history template**\n- **Recent purchases widget**\n- **Receipt list component**\n- **Payment history template**\n\nCould you provide more context about:\n- What SparkWell product you're using?\n- What you want to display (customer receipts, payment history, etc.)?\n- Where you want to use this template?\n\nThis would help me give you more specific guidance!",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "be weid",
+  "timestamp": 1762820330957,
+  "latencyMs": 7735
+}
