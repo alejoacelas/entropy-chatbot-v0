@@ -102,16 +102,14 @@ export async function runEvaluation(
   console.log(`Starting evaluation with model: ${modelToUse}`);
   console.log(`Total prompts: ${prompts.length}`);
 
-  const results: EvaluationResult[] = [];
-
-  // Process prompts sequentially to respect rate limits
-  for (let i = 0; i < prompts.length; i++) {
-    const prompt = prompts[i];
-    console.log(`Processing prompt ${i + 1}/${prompts.length}`);
-
-    const result = await evaluatePrompt(prompt, modelToUse, systemPromptTemplate);
-    results.push(result);
-  }
+  // Process all prompts in parallel
+  console.log('Processing all prompts in parallel...');
+  const results = await Promise.all(
+    prompts.map((prompt, i) => {
+      console.log(`Starting prompt ${i + 1}/${prompts.length}`);
+      return evaluatePrompt(prompt, modelToUse, systemPromptTemplate);
+    })
+  );
 
   // Summary
   const cached = results.filter(r => r.cached).length;
