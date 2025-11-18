@@ -1,0 +1,5 @@
+{
+  "name": "web-search-prompt",
+  "content": "<guidance>ALWAYS use web search, and offer abundant markdown links in your response.</guidance>\n{user_message}",
+  "timestamp": 1763424893251
+}

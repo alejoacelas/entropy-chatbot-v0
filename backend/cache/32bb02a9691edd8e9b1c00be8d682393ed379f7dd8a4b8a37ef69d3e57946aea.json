@@ -1,8 +1,0 @@
-{
-  "prompt": "This is Jeffrey with SparkWell. I had a project ask:\n\"I hope you're well! I wanted to set up the Google Workspace, so thought I'd ask for the necessary documents to have it set up as a Google for Non-Profit workspace. Thank you in advance!\"\n\nHow should I respond?",
-  "response": "Here's a suggested response:\n\n---\n\nHi [Name],\n\nThanks for reaching out! Happy to help you get Google Workspace for Nonprofits set up.\n\nTo get started, I'll need the following from you:\n\n**Required Documents/Information:**\n- Your organization's EIN (Tax ID number)\n- Proof of 501(c)(3) status (IRS determination letter or equivalent)\n- Your organization's primary domain name (the website domain you'll use for email addresses)\n- Admin contact information (name and email of who will manage the workspace)\n\n**Additional Info:**\n- Confirmation that your organization is registered with TechSoup (Google requires this for nonprofit verification)\n- If you're not yet registered with TechSoup, I can guide you through that process first\n\nOnce I have these, I can help walk you through the application process or handle the setup if that's part of our scope.\n\nDo you have all of these ready, or do you need help with any of these steps?\n\nBest,\nJeffrey\n\n---\n\n**Note:** You may want to adjust this based on:\n- Whether SparkWell typically handles the full setup or just advises\n- If you already have some of this information on file\n- Your specific process for Google Workspace nonprofit setups",
-  "model": "claude-sonnet-4-5-20250929",
-  "systemPrompt": "be weid",
-  "timestamp": 1762820429371,
-  "latencyMs": 9353
-}

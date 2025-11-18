@@ -1,8 +1,0 @@
-{
-  "prompt": "Do I need to be a registered entity before receiving funds from Open Philanthropy?",
-  "response": "# Registration Requirements for Open Philanthropy Funding\n\nNo, you generally **do not need to be a registered entity** before receiving funds from Open Philanthropy, though there are some important nuances:\n\n## Individual Grants\n- Open Philanthropy does make grants directly to **individuals** for certain programs\n- Examples include their fellowship programs and some research grants\n- These don't require you to have a registered organization\n\n## Organizational Grants\nFor larger or organizational grants, you have a few options:\n\n1. **Registered nonprofit** (501(c)(3) in the US or equivalent elsewhere)\n2. **Fiscal sponsorship** - partnering with an existing nonprofit that receives funds on your behalf\n3. **For-profit entities** - Open Phil does fund some for-profit companies, particularly in areas like biosecurity or AI safety\n\n## Practical Considerations\n- **Fiscal sponsorship** is a common path for early-stage projects that aren't yet incorporated\n- Open Phil has funded projects through fiscal sponsors like Rethink Charity, CEA, and others\n- The specific requirements depend on:\n  - Grant size\n  - Type of work\n  - Geographic location\n  - Focus area\n\n## Best Approach\nIf you're considering applying, I'd recommend:\n1. Reviewing their grants database to see similar projects\n2. Reaching out directly to discuss your specific situation\n3. Exploring fiscal sponsorship if you're not yet incorporated\n\nWould you like more information about any of these options?",
-  "model": "claude-sonnet-4-5-20250929",
-  "systemPrompt": "be weid",
-  "timestamp": 1762820251385,
-  "latencyMs": 9230
-}

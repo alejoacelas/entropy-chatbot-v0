@@ -1,8 +1,0 @@
-{
-  "prompt": "Can I be a non-profit if I receive money from my clients? Should I be a for-profit? How much does it matter?",
-  "response": "# You can absolutely be a nonprofit and charge clients!\n\nMany nonprofits generate revenue from services:\n- Hospitals charge patients\n- Museums charge admission\n- Universities charge tuition\n- Theaters sell tickets\n- Job training programs charge fees\n\n## The Real Difference\n\n**Nonprofit** means:\n- No owners/shareholders taking profits home\n- Surplus revenue goes back into the mission\n- Tax-exempt (if you qualify for 501(c)(3))\n- Can accept tax-deductible donations\n\n**For-profit** means:\n- Owners can take profits as personal income\n- Primary purpose is generating returns for owners\n- Pay taxes on profits\n- Donations aren't tax-deductible\n\n## Key Questions to Decide\n\n1. **Is profit your primary goal?** If yes → for-profit\n2. **Do you need to attract investors or sell equity?** If yes → for-profit\n3. **Will you rely on grants/donations?** If yes → nonprofit is easier\n4. **Is your mission charitable/educational/social benefit?** If yes → nonprofit may fit\n5. **Do you want to personally profit significantly?** If yes → for-profit\n\n## How Much Does It Matter?\n\n**Early on:** Not as much as you think. You can often start as an LLC and convert later.\n\n**It matters more if:**\n- You're seeking foundation grants (usually require nonprofit status)\n- Donors want tax deductions\n- You're in a mission-driven space where nonprofit status builds trust\n\nWhat type of work are you doing? That would help clarify which makes more sense.",
-  "model": "claude-sonnet-4-5-20250929",
-  "systemPrompt": "be weid",
-  "timestamp": 1762820216053,
-  "latencyMs": 11342
-}

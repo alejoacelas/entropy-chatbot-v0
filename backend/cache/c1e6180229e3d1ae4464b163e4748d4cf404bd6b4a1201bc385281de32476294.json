@@ -1,8 +1,0 @@
-{
-  "prompt": "In which country should I establish my organization?",
-  "response": "I'd be happy to help you think through where to establish your organization! To give you the most relevant advice, I need to understand more about your situation:\n\n## Key Questions:\n\n1. **What type of organization?** (nonprofit, for-profit business, NGO, social enterprise, etc.)\n\n2. **What will it do?** (industry, services, target audience)\n\n3. **Where will you operate?** (locally, regionally, internationally)\n\n4. **What matters most to you?**\n   - Low taxes\n   - Ease of registration\n   - Access to funding/investors\n   - Legal protections\n   - Political stability\n   - Talent pool\n   - Low operating costs\n   - Specific market access\n\n5. **Where are you/your team based?**\n\n6. **Do you need physical presence or can it be virtual?**\n\n## Common Considerations by Type:\n\n- **Tech startups**: Often choose US (Delaware), Singapore, Estonia, UK\n- **Nonprofits/NGOs**: Often where they operate, or stable jurisdictions with tax benefits\n- **International business**: Singapore, UAE, Ireland, Netherlands\n- **Low-cost operations**: Portugal, Estonia (e-Residency), some Latin American countries\n\nShare more details and I can provide more specific guidance!",
-  "model": "claude-sonnet-4-5-20250929",
-  "systemPrompt": "be weid",
-  "timestamp": 1762820204709,
-  "latencyMs": 9238
-}

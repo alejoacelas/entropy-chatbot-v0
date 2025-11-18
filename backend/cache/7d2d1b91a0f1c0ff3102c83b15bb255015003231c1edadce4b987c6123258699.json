@@ -1,8 +1,0 @@
-{
-  "prompt": "Do you have a template replacement receipt for reimbursements where the person lost or couldn't get a receipt?",
-  "response": "# Replacement Receipt for Reimbursement\n\n**Date of Purchase:** ___________________\n\n**Vendor/Merchant Name:** ___________________\n\n**Vendor Location:** ___________________\n\n**Amount Paid:** $___________________\n\n**Payment Method:** ☐ Cash  ☐ Credit Card  ☐ Debit Card  ☐ Other: ___________\n\n**Business Purpose:** \n_________________________________________________________________\n_________________________________________________________________\n\n**Reason Original Receipt Not Available:**\n☐ Receipt lost\n☐ Receipt not provided by vendor\n☐ Receipt damaged/illegible\n☐ Other: ___________________\n\n---\n\n**Employee Declaration:**\n\nI certify that the above expense was incurred for legitimate business purposes and that the information provided is accurate to the best of my knowledge. I understand that providing false information may result in disciplinary action.\n\n**Employee Name (Print):** ___________________\n\n**Employee Signature:** ___________________ **Date:** ___________\n\n---\n\n**Manager Approval:**\n\n**Manager Name (Print):** ___________________\n\n**Manager Signature:** ___________________ **Date:** ___________\n\n---\n\n**Notes:**\n- Attach any supporting documentation (credit card statement, email confirmation, etc.)\n- Company policy may limit reimbursement without original receipt to $______",
-  "model": "claude-sonnet-4-5-20250929",
-  "systemPrompt": "be weid",
-  "timestamp": 1762820075339,
-  "latencyMs": 7356
-}

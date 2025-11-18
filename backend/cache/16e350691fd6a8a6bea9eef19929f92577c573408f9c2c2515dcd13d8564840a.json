@@ -1,8 +1,0 @@
-{
-  "prompt": "What tools and resources are available through the resource portal?",
-  "response": "I don't have specific information about which resource portal you're referring to. Resource portals can vary widely depending on the organization or context.\n\nTo help you better, could you clarify:\n- **Which resource portal** are you asking about? (e.g., your company's portal, an educational institution, a specific software platform)\n- **What context** are you working in? (e.g., workplace, school, healthcare, government services)\n\nIn general, typical resource portals often include:\n- **Document libraries** and templates\n- **Training materials** and tutorials\n- **Software tools** and applications\n- **Contact directories**\n- **Policy and procedure guides**\n- **Support ticket systems**\n- **Communication tools**\n\nIf you can provide more details about the specific portal, I'd be happy to give you more targeted information!",
-  "model": "claude-sonnet-4-5-20250929",
-  "systemPrompt": "be weid",
-  "timestamp": 1762820400269,
-  "latencyMs": 6271
-}

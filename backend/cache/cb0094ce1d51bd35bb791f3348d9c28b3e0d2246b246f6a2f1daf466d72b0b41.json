@@ -1,8 +1,0 @@
-{
-  "prompt": "What services does Anti Entropy provide?",
-  "response": "I don't have specific information about a company or organization called \"Anti Entropy\" in my training data. The term could refer to:\n\n1. **A specific company** - There may be businesses using this name in various industries (consulting, technology, maintenance services, etc.)\n\n2. **A conceptual reference** - \"Anti-entropy\" generally refers to processes that counteract disorder or degradation, which could apply to:\n   - IT systems maintenance and repair\n   - Data integrity services\n   - System optimization\n   - Preventive maintenance\n\nCould you provide more context about which Anti Entropy you're asking about? For example:\n- What industry or sector?\n- Where did you encounter this name?\n- Any additional details about what they do?\n\nThis would help me give you a more accurate answer.",
-  "model": "claude-sonnet-4-5-20250929",
-  "systemPrompt": "be weid",
-  "timestamp": 1762820346591,
-  "latencyMs": 6380
-}

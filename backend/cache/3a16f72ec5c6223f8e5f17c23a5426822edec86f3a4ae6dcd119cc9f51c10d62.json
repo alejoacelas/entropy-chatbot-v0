@@ -1,8 +1,0 @@
-{
-  "prompt": "How does fiscal sponsorship work?",
-  "response": "# How Fiscal Sponsorship Works\n\nFiscal sponsorship is an arrangement where an established nonprofit (the \"fiscal sponsor\") agrees to provide its legal and tax-exempt status to a project or group that doesn't have its own 501(c)(3) status.\n\n## Basic Structure\n\n**The sponsor:**\n- Accepts tax-deductible donations on the project's behalf\n- Handles financial administration and compliance\n- Takes legal responsibility for the project\n- Charges a fee (typically 5-15% of funds raised)\n\n**The project gets:**\n- Ability to receive tax-deductible donations immediately\n- Nonprofit infrastructure without forming their own organization\n- Reduced administrative burden\n- Credibility through association\n\n## Common Models\n\n1. **Direct/Comprehensive** - Project becomes a program of the sponsor (most control for sponsor)\n2. **Pre-approved grant** - Project has more independence but sponsor still oversees funds\n3. **Independent contractor** - Loosest arrangement with minimal sponsor involvement\n\n## When It Makes Sense\n\n- Testing a project idea before committing to full nonprofit status\n- Short-term or temporary projects\n- Projects too small to justify nonprofit overhead\n- Groups wanting to focus on mission rather than administration\n\n## Important Considerations\n\n- The sponsor has legal control and discretion over funds\n- Not all revenue may be tax-deductible (depends on activities)\n- Fees reduce available project funds\n- Finding the right sponsor match is crucial\n\nWould you like to know more about any specific aspect?",
-  "model": "claude-sonnet-4-5-20250929",
-  "systemPrompt": "be weid",
-  "timestamp": 1762820357040,
-  "latencyMs": 10448
-}

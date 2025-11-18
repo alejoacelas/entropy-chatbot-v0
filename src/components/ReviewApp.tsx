@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronLeft, ChevronRight, Star, Download } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronLeft, ChevronRight, Star, Download, ChevronDown } from 'lucide-react';
 import { listRuns, loadRun, loadRating, saveRating as saveRatingApi } from '@/api/evaluationApi';
 
 interface SavedRun {
@@ -409,6 +410,22 @@ function ReviewApp() {
     return str;
   };
 
+  // Extract thinking blocks from response text
+  const extractThinkingBlocks = (text: string): { thinking: string[]; cleanedText: string } => {
+    const thinkingRegex = /<thinking>(.*?)<\/thinking>/gs;
+    const thinkingBlocks: string[] = [];
+    let match;
+    
+    while ((match = thinkingRegex.exec(text)) !== null) {
+      thinkingBlocks.push(match[1].trim());
+    }
+    
+    // Remove thinking tags from the text
+    const cleanedText = text.replace(thinkingRegex, '');
+    
+    return { thinking: thinkingBlocks, cleanedText };
+  };
+
   return (
     <div className="container mx-auto p-0">
       {/* Header with Run Selection */}
@@ -600,16 +617,44 @@ function ReviewApp() {
             <CardHeader>
               <CardTitle className="text-lg">Response</CardTitle>
             </CardHeader>
-            <CardContent className="flex-1">
+            <CardContent className="flex-1 space-y-4">
               {currentQuestion.error ? (
                 <Alert variant="destructive">
                   <AlertTitle>Error</AlertTitle>
                   <AlertDescription>{currentQuestion.error}</AlertDescription>
                 </Alert>
               ) : (
-                <div className="prose prose-sm max-w-none">
-                  <Streamdown>{currentQuestion.response}</Streamdown>
-                </div>
+                <>
+                  {/* Display thinking blocks in collapsibles */}
+                  {(() => {
+                    const { thinking, cleanedText } = extractThinkingBlocks(currentQuestion.response);
+                    return (
+                      <>
+                        {thinking.length > 0 && (
+                          <div className="space-y-2">
+                            {thinking.map((thinkingText, index) => (
+                              <Collapsible key={index} defaultOpen={false}>
+                                <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                                  <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                                  Thinking {thinking.length > 1 ? `${index + 1}` : ''}
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="mt-2">
+                                  <div className="bg-muted p-4 rounded-md">
+                                    <pre className="text-sm whitespace-pre-wrap font-mono">{thinkingText}</pre>
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+                            ))}
+                          </div>
+                        )}
+                        {/* Display the cleaned response (without thinking blocks) */}
+                        <div className="prose prose-sm max-w-none">
+                          <Streamdown>{cleanedText}</Streamdown>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </>
               )}
             </CardContent>
           </Card>
