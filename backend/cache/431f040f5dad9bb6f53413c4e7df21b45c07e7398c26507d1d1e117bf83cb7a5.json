@@ -1,0 +1,8 @@
+{
+  "prompt": "What is artificial intelligence?",
+  "response": "Artificial intelligence (AI) is the simulation of human intelligence processes by computer systems.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are a helpful AI assistant.\\n\\nWhat is artificial intelligence?",
+  "timestamp": 1766096180180,
+  "latencyMs": 0
+}

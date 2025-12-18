@@ -1,0 +1,26 @@
+{
+  "runName": "no-prompt-col-run",
+  "datasetName": "no-prompt-col-test",
+  "model": "claude-sonnet-4-5-20250929",
+  "timestamp": 1766098349851,
+  "promptResults": [
+    {
+      "promptName": "helpful_assistant",
+      "promptContent": "You are a helpful AI assistant.\\n\\n{user_message}",
+      "results": [
+        {
+          "prompt": "What is testing?",
+          "response": "Testing answer from CSV",
+          "cached": true,
+          "latencyMs": 0
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalPrompts": 1,
+    "totalTests": 1,
+    "cached": 1,
+    "errors": 0
+  }
+}

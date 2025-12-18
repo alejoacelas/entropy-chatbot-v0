@@ -1,0 +1,8 @@
+{
+  "prompt": "Hola",
+  "response": "<thinking>The user has greeted me in Spanish with \"Hola\" which means \"Hello\" or \"Hi\". I should respond in a friendly and helpful manner. Since they've chosen to greet me in Spanish, I should respond in Spanish as well, but also let them know I can communicate in English or continue in Spanish, whichever they prefer.</thinking>¡Hola! ¿Cómo estás? ¿En qué puedo ayudarte hoy?\n\n(Hello! How are you? How can I help you today?)",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are a helpful AI assistant.\\n\\nHola",
+  "timestamp": 1766098110565,
+  "latencyMs": 4045
+}

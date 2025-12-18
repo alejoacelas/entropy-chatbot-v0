@@ -1,11 +1,13 @@
 import express from 'express';
 import multer from 'multer';
 import { runMultiPromptEvaluation } from '../services/evaluationService.js';
-import { parsePromptsFromCsv } from '../utils/csvParser.js';
+import { parseCsvImport, extractUniquePrompts, extractUniqueQuestions, resolvePromptContent } from '../utils/csvParser.js';
 import { saveRun, listRuns, loadRun } from '../utils/runStorage.js';
 import { saveDataset, listDatasets, loadDataset } from '../utils/datasetStorage.js';
 import { savePrompt, listPrompts, loadPrompt, deletePrompt } from '../utils/promptStorage.js';
 import { loadRating, saveRating } from '../utils/ratingStorage.js';
+import { setCachedResponse } from '../utils/cache.js';
+import { CsvImportRow } from '../types.js';
 
 const router = express.Router();
 const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
@@ -19,37 +21,126 @@ const upload = multer({
 });
 
 /**
+ * Validate prompts from CSV against stored prompts
+ * Returns validation result with prompts to register
+ */
+async function validateAndPreparePrompts(
+  uniquePrompts: Array<{ name: string; content: string }>
+): Promise<{
+  valid: boolean;
+  errors: string[];
+  promptsToRegister: Array<{ name: string; content: string }>;
+  existingPrompts: Array<{ name: string; content: string }>;
+}> {
+  const errors: string[] = [];
+  const promptsToRegister: Array<{ name: string; content: string }> = [];
+  const existingPrompts: Array<{ name: string; content: string }> = [];
+
+  for (const { name, content } of uniquePrompts) {
+    const existing = await loadPrompt(name);
+
+    if (existing) {
+      // Check if content matches
+      if (existing.content === content) {
+        // Same content - use existing
+        existingPrompts.push({ name, content });
+      } else {
+        // Different content - error
+        errors.push(
+          `Prompt '${name}' already exists with different content. ` +
+          `Please use a different prompt name or update the existing prompt first.`
+        );
+      }
+    } else {
+      // New prompt - needs registration
+      promptsToRegister.push({ name, content });
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    promptsToRegister,
+    existingPrompts,
+  };
+}
+
+/**
+ * Pre-populate cache with imported answers
+ * Uses the same cache key computation as evaluationService
+ */
+async function prepopulateCache(
+  importRows: CsvImportRow[],
+  model: string
+): Promise<{ cached: number; errors: string[] }> {
+  let cached = 0;
+  const errors: string[] = [];
+
+  for (const row of importRows) {
+    try {
+      // Apply the prompt template to get the actual system prompt used for caching
+      // This matches the behavior in evaluationService.ts:48
+      const appliedSystemPrompt = row.promptContent.replace(/{user_message}/g, row.question);
+
+      await setCachedResponse(
+        model,
+        appliedSystemPrompt,
+        row.question,
+        row.answer,
+        0 // latencyMs = 0 for imported responses
+      );
+      cached++;
+    } catch (error) {
+      errors.push(
+        `Failed to cache answer for question "${row.question.substring(0, 50)}...": ` +
+        (error instanceof Error ? error.message : 'Unknown error')
+      );
+    }
+  }
+
+  return { cached, errors };
+}
+
+/**
  * POST /api/evaluate
  *
- * Accepts:
- * - CSV file or datasetName for the test data
- * - Array of promptNames to run on the dataset
- * - runName for saving the evaluation
- * - Optional: model selection
+ * Accepts CSV file with question, prompt_name, prompt, and answer columns.
+ * Auto-registers prompts, pre-populates cache, and runs evaluation.
+ * Also supports loading existing datasets and selecting additional prompts.
  *
- * Body format (multipart or JSON):
+ * Body format (multipart):
  * {
- *   file?: File,                    // CSV upload
- *   datasetName?: string,           // Name for new dataset or existing dataset to load
- *   promptNames: string[],          // Array of system prompt names to test
+ *   file?: File,                    // CSV upload with question/prompt_name/prompt/answer columns
+ *   datasetName: string,            // Name for new dataset or existing dataset to load
+ *   promptNames?: string[],         // Additional prompt names to include (beyond those in CSV)
  *   runName: string,                // Name for this evaluation run
- *   model?: string                  // Model to use (optional)
+ *   model?: string                  // Model to use (optional, defaults to claude-sonnet-4-5-20250929)
  * }
  */
 router.post('/evaluate', upload.single('file'), async (req, res) => {
   // Set timeout to 30 minutes for this specific endpoint
   req.setTimeout(1800000);
   res.setTimeout(1800000);
-  
+
   try {
     let datasetPrompts: string[] = [];
     let datasetName = '';
+    const systemPrompts: Array<{ name: string; content: string }> = [];
+    let promptsRegistered = 0;
+    let cacheEntriesCreated = 0;
+
+    const model = req.body.model || DEFAULT_MODEL;
+
+    // Run name is required
+    const runName = req.body.runName;
+    if (!runName || !runName.trim()) {
+      return res.status(400).json({
+        error: 'runName is required.',
+      });
+    }
 
     // Check if CSV file was uploaded
     if (req.file) {
-      const csvContent = req.file.buffer.toString('utf-8');
-      datasetPrompts = parsePromptsFromCsv(csvContent);
-
       // Dataset name is required when uploading CSV
       datasetName = req.body.datasetName;
       if (!datasetName || !datasetName.trim()) {
@@ -58,11 +149,75 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
         });
       }
 
-      // Save the dataset
+      // Parse CSV (prompt column is optional)
+      const csvContent = req.file.buffer.toString('utf-8');
+      let importRows = parseCsvImport(csvContent);
+
+      console.log(`Parsed CSV with ${importRows.length} rows`);
+
+      // Load all registered prompts to resolve missing prompt content
+      const registeredPromptNames = await listPrompts();
+      const registeredPromptsMap = new Map<string, string>();
+      for (const name of registeredPromptNames) {
+        const prompt = await loadPrompt(name);
+        if (prompt) {
+          registeredPromptsMap.set(name, prompt.content);
+        }
+      }
+
+      // Resolve missing prompt content from registered prompts
+      const resolved = resolvePromptContent(importRows, registeredPromptsMap);
+      if (resolved.errors.length > 0) {
+        return res.status(400).json({
+          error: 'Failed to resolve prompt content',
+          details: resolved.errors,
+        });
+      }
+      importRows = resolved.rows;
+
+      // Extract unique prompts and questions from CSV
+      const csvPrompts = extractUniquePrompts(importRows);
+      const uniqueQuestions = extractUniqueQuestions(importRows);
+      datasetPrompts = uniqueQuestions;
+
+      console.log(`Found ${csvPrompts.length} unique prompts and ${uniqueQuestions.length} unique questions in CSV`);
+
+      // Validate CSV prompts against storage (allows same content, errors on different content)
+      const validation = await validateAndPreparePrompts(csvPrompts);
+
+      if (!validation.valid) {
+        return res.status(400).json({
+          error: 'Prompt validation failed',
+          details: validation.errors,
+        });
+      }
+
+      // Auto-register new prompts from CSV (skips if already registered with same content)
+      for (const { name, content } of validation.promptsToRegister) {
+        await savePrompt(name, content);
+        console.log(`Auto-registered prompt: ${name}`);
+        promptsRegistered++;
+      }
+
+      // Pre-populate cache with imported answers
+      const cacheResult = await prepopulateCache(importRows, model);
+      cacheEntriesCreated = cacheResult.cached;
+      console.log(`Pre-populated cache with ${cacheResult.cached} entries`);
+
+      if (cacheResult.errors.length > 0) {
+        console.warn('Cache population warnings:', cacheResult.errors);
+      }
+
+      // Save the dataset (unique questions only)
       await saveDataset(datasetName.trim(), datasetPrompts);
-      console.log(`Saved dataset: ${datasetName}`);
+      console.log(`Saved dataset: ${datasetName} (${datasetPrompts.length} unique questions)`);
+
+      // Add CSV prompts to system prompts
+      for (const prompt of csvPrompts) {
+        systemPrompts.push(prompt);
+      }
     }
-    // Check if datasetName was provided (load existing dataset)
+    // No CSV - load existing dataset
     else if (req.body.datasetName && typeof req.body.datasetName === 'string') {
       const dataset = await loadDataset(req.body.datasetName);
       if (!dataset) {
@@ -72,6 +227,7 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
       }
       datasetPrompts = dataset.prompts;
       datasetName = req.body.datasetName;
+      console.log(`Loaded existing dataset: ${datasetName} (${datasetPrompts.length} prompts)`);
     }
     // No valid input
     else {
@@ -86,7 +242,7 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
       });
     }
 
-    // Get array of system prompt names
+    // Get additional prompt names from request (if any)
     let promptNames = req.body.promptNames;
 
     // If promptNames is a string (from FormData), parse it as JSON
@@ -94,46 +250,45 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
       try {
         promptNames = JSON.parse(promptNames);
       } catch (e) {
-        return res.status(400).json({
-          error: 'promptNames must be a valid JSON array.',
-        });
+        // Ignore parse errors - promptNames is optional
+        promptNames = [];
       }
     }
 
-    if (!promptNames || !Array.isArray(promptNames) || promptNames.length === 0) {
-      return res.status(400).json({
-        error: 'promptNames array is required and must contain at least one prompt name.',
-      });
-    }
+    // Load additional prompts by name (beyond those from CSV)
+    if (promptNames && Array.isArray(promptNames) && promptNames.length > 0) {
+      const existingPromptNames = new Set(systemPrompts.map(p => p.name));
 
-    // Load each system prompt
-    const systemPrompts: Array<{ name: string; content: string }> = [];
-    for (const name of promptNames) {
-      const prompt = await loadPrompt(name);
-      if (!prompt) {
-        return res.status(404).json({
-          error: `System prompt not found: ${name}`,
-        });
+      for (const name of promptNames) {
+        // Skip if already added from CSV
+        if (existingPromptNames.has(name)) {
+          continue;
+        }
+
+        const prompt = await loadPrompt(name);
+        if (!prompt) {
+          return res.status(404).json({
+            error: `System prompt not found: ${name}`,
+          });
+        }
+        systemPrompts.push({ name: prompt.name, content: prompt.content });
       }
-      systemPrompts.push({ name: prompt.name, content: prompt.content });
     }
 
-    // Run name is required
-    const runName = req.body.runName;
-    if (!runName || !runName.trim()) {
+    // Must have at least one system prompt
+    if (systemPrompts.length === 0) {
       return res.status(400).json({
-        error: 'runName is required.',
+        error: 'No system prompts specified. Either include prompts in CSV or provide promptNames.',
       });
     }
 
-    const model = req.body.model || undefined;
-
-    console.log(`Received multi-prompt evaluation request:`);
-    console.log(`- Dataset: ${datasetName} (${datasetPrompts.length} prompts)`);
+    console.log(`Running evaluation:`);
+    console.log(`- Dataset: ${datasetName} (${datasetPrompts.length} questions)`);
     console.log(`- System prompts: ${systemPrompts.map(p => p.name).join(', ')}`);
     console.log(`- Run name: ${runName}`);
+    console.log(`- Model: ${model}`);
 
-    // Run evaluation with multiple system prompts
+    // Run evaluation
     const promptResults = await runMultiPromptEvaluation(datasetPrompts, systemPrompts, model);
 
     // Calculate summary statistics
@@ -148,11 +303,10 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
     }
 
     // Save run
-    const actualModel = model || DEFAULT_MODEL;
     await saveRun(
       runName.trim(),
       datasetName.trim(),
-      actualModel,
+      model,
       promptResults
     );
     console.log(`Saved run: ${runName}`);
@@ -162,13 +316,15 @@ router.post('/evaluate', upload.single('file'), async (req, res) => {
       success: true,
       runName: runName.trim(),
       datasetName: datasetName.trim(),
-      model: actualModel,
+      model,
       promptResults,
       summary: {
         totalPrompts: systemPrompts.length,
         totalTests,
         cached: totalCached,
         errors: totalErrors,
+        promptsRegistered,
+        cacheEntriesCreated,
       },
     });
   } catch (error) {

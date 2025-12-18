@@ -1,0 +1,8 @@
+{
+  "prompt": "What is artificial intelligence?",
+  "response": "Artificial Intelligence (AI) refers to computational systems designed to perform tasks that typically require human intelligence, including reasoning, learning, perception, and natural language understanding.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are an expert AI researcher.\\n\\nWhat is artificial intelligence?",
+  "timestamp": 1766096180181,
+  "latencyMs": 0
+}

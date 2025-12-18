@@ -1,0 +1,8 @@
+{
+  "prompt": "Test question",
+  "response": "<thinking>The user has sent \"Test question\" as their message. This appears to be a simple test to see if I'm working properly. I should respond in a helpful and friendly way, acknowledging their message and offering to help with any actual questions they might have.</thinking>Hello! I'm working and ready to help. This appears to be a test message. \n\nIf you have any actual questions or need assistance with something, feel free to ask! I can help with:\n- Answering questions on various topics\n- Providing explanations\n- Helping with writing or analysis\n- Problem-solving\n- And much more\n\nWhat would you like to know?",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are a helpful AI assistant.\\n\\nTest question",
+  "timestamp": 1766097892467,
+  "latencyMs": 5102
+}

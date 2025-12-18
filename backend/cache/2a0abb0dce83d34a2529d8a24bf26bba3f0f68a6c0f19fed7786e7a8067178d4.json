@@ -1,0 +1,8 @@
+{
+  "prompt": "What is AI?",
+  "response": "AI answer",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are a test assistant.\\n\\nWhat is AI?",
+  "timestamp": 1766097240727,
+  "latencyMs": 0
+}

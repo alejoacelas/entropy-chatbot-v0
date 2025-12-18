@@ -549,7 +549,9 @@ function ReviewApp() {
                 <CardTitle className="text-lg">Question</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm">{currentQuestion.prompt}</p>
+                <div className="prose text-sm">
+                  <Streamdown>{currentQuestion.prompt}</Streamdown>
+                </div>
                 <div className="mt-4 flex gap-2">
                   {currentQuestion.cached && (
                     <Badge variant="secondary">Cached</Badge>

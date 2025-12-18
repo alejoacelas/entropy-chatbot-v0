@@ -1,0 +1,8 @@
+{
+  "prompt": "Test question",
+  "response": "CSV answer",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "CSV prompt content\\n\\nTest question",
+  "timestamp": 1766097887356,
+  "latencyMs": 0
+}

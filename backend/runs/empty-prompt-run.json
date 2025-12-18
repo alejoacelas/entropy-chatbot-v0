@@ -1,0 +1,38 @@
+{
+  "runName": "empty-prompt-run",
+  "datasetName": "empty-prompt-test",
+  "model": "claude-sonnet-4-5-20250929",
+  "timestamp": 1766097240734,
+  "promptResults": [
+    {
+      "promptName": "test_prompt",
+      "promptContent": "You are a test assistant.\\n\\n{user_message}",
+      "results": [
+        {
+          "prompt": "What is AI?",
+          "response": "AI answer",
+          "cached": true,
+          "latencyMs": 0
+        },
+        {
+          "prompt": "What is ML?",
+          "response": "ML answer",
+          "cached": true,
+          "latencyMs": 0
+        },
+        {
+          "prompt": "What is DL?",
+          "response": "DL answer",
+          "cached": true,
+          "latencyMs": 0
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalPrompts": 1,
+    "totalTests": 3,
+    "cached": 3,
+    "errors": 0
+  }
+}

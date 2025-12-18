@@ -1,0 +1,8 @@
+{
+  "prompt": "What is matching?",
+  "response": "Matching answer",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are a helpful AI assistant.\\n\\nWhat is matching?",
+  "timestamp": 1766098349873,
+  "latencyMs": 0
+}

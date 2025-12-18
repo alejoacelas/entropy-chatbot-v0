@@ -1,0 +1,8 @@
+{
+  "prompt": "Explain machine learning in simple terms",
+  "response": "Machine learning is a type of AI where computers learn from data without being explicitly programmed.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are a helpful AI assistant.\\n\\nExplain machine learning in simple terms",
+  "timestamp": 1766096180180,
+  "latencyMs": 0
+}

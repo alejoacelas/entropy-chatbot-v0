@@ -1,0 +1,8 @@
+{
+  "prompt": "What is testing?",
+  "response": "Testing answer from CSV",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are a helpful AI assistant.\\n\\nWhat is testing?",
+  "timestamp": 1766098349848,
+  "latencyMs": 0
+}

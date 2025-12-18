@@ -28,6 +28,13 @@ export interface PromptResult {
   results: EvaluationResult[];
 }
 
+export interface CsvImportRow {
+  question: string;       // User message
+  promptName: string;     // System prompt identifier
+  promptContent: string;  // System prompt template
+  answer: string;         // Pre-computed AI response
+}
+
 export interface SavedRun {
   runName: string;
   datasetName: string;

@@ -1,0 +1,8 @@
+{
+  "prompt": "Hola",
+  "response": "<thinking>The user greeted me with \"Hola\" which is Spanish for \"Hello\" or \"Hi\". I should respond in a friendly and professional manner. Since they greeted me in Spanish, I could respond in Spanish as well, though I should be ready to continue in either Spanish or English based on their preference.\n\nLet me respond warmly and offer my assistance.</thinking>¡Hola! ¿Cómo estás? ¿En qué puedo ayudarte hoy?\n\n(Hello! How are you? How can I help you today?)",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are an expert AI researcher.\\n\\nHola",
+  "timestamp": 1766097920288,
+  "latencyMs": 4624
+}

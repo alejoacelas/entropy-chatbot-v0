@@ -1,0 +1,8 @@
+{
+  "prompt": "Explain machine learning in simple terms",
+  "response": "Machine learning (ML) is a subfield of artificial intelligence that develops algorithms enabling systems to learn patterns from data and make predictions or decisions without explicit programming.",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are an expert AI researcher.\\n\\nExplain machine learning in simple terms",
+  "timestamp": 1766096180182,
+  "latencyMs": 0
+}

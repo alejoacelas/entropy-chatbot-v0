@@ -1,0 +1,8 @@
+{
+  "prompt": "What is DL?",
+  "response": "DL answer",
+  "model": "claude-sonnet-4-5-20250929",
+  "systemPrompt": "You are a test assistant.\\n\\nWhat is DL?",
+  "timestamp": 1766097240729,
+  "latencyMs": 0
+}
