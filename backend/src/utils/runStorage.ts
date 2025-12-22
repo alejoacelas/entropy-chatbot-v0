@@ -58,21 +58,30 @@ export async function listRuns(): Promise<string[]> {
     const files = await storage.list('runs/');
     const jsonFiles = files.filter(f => f.endsWith('.json'));
 
-    // Read each file to get the original name
-    const runs = await Promise.all(
+    // Read each file to get the original name and timestamp
+    const runsWithTimestamp = await Promise.all(
       jsonFiles.map(async (file) => {
         try {
           const key = `runs/${file}`;
           const parsed = await storage.load<SavedRun>(key);
-          return parsed?.runName || file.replace('.json', '').replace(/_/g, ' ');
+          return {
+            name: parsed?.runName || file.replace('.json', '').replace(/_/g, ' '),
+            timestamp: parsed?.timestamp || 0
+          };
         } catch {
           // If file is corrupt, return filename without extension
-          return file.replace('.json', '').replace(/_/g, ' ');
+          return {
+            name: file.replace('.json', '').replace(/_/g, ' '),
+            timestamp: 0
+          };
         }
       })
     );
 
-    return runs.sort();
+    // Sort by timestamp descending (newest first)
+    runsWithTimestamp.sort((a, b) => b.timestamp - a.timestamp);
+
+    return runsWithTimestamp.map(r => r.name);
   } catch (error) {
     return [];
   }
