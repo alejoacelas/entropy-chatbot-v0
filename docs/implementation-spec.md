@@ -19,7 +19,12 @@ A user can ask a real question, keep it as a test case by default, and compare a
 
 - Next.js app and API routes deploy as one Vercel project.
 - Anthropic’s Models API supplies the available model list; the Messages API generates chat and experiment responses.
-- A shared access code protects the workspace and Anthropic account.
+- Every model call receives a `search_resource_portal` tool backed by Aerin’s current article index. The model can retrieve full articles and canonical citations during chat or evaluations.
+- The prompt library starts with the original 14.7 KB default, the original 80 KB experimental prompt, and Aerin’s current portal instructions.
+- SparkWell, Resource Portal, and Anti Entropy questions force a portal lookup. Other questions leave the tool available to the model.
+- Results record portal search counts and queries. The selected system prompt is sent and snapshotted byte-for-byte; tool configuration remains a separate platform capability.
+- The app opens directly without a password or access-code screen.
+- The public generation API limits each forwarded IP to 120 requests per 10 minutes.
 - A private Vercel Blob stores prompts, cases, and run summaries. Each completion is checkpointed separately, so accumulated results cannot push the workspace past Vercel’s request limit.
 - Runs snapshot their case text, prompt content, and model labels. Editing the library cannot rewrite history.
 - Blob reads bypass cache and workspace edits reject stale writes instead of silently overwriting newer state.
@@ -35,4 +40,6 @@ A user can ask a real question, keep it as a test case by default, and compare a
 - Any old run can be reopened with its original cases, prompts, models, and full outputs.
 - Captured cases can be assigned to multiple sets from Library → Test sets.
 - Prompt variants can be created and edited.
+- A Resource Portal question triggers a live portal search and returns canonical article links.
+- The app and APIs open without a password, cookie, or access-code redirect.
 - Desktop and mobile layouts expose the main transitions.

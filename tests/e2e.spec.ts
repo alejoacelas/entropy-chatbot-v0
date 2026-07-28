@@ -2,6 +2,10 @@ import { expect, test } from "@playwright/test";
 
 test("capture, experiment, results, and prompt editing work", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium", "Desktop workflow check");
+  await expect((await page.request.get("/", { maxRedirects: 0 })).status()).toBe(200);
+  await expect((await page.request.get("/api/workspace", { maxRedirects: 0 })).status()).toBe(200);
+  await expect((await page.request.get("/api/models", { maxRedirects: 0 })).status()).toBe(200);
+  expect((await page.context().cookies()).some((cookie) => cookie.name.includes("auth"))).toBe(false);
   await page.route("**/api/generate", async (route) => {
     const body = route.request().postDataJSON() as {
       modelId: string;
@@ -19,6 +23,8 @@ test("capture, experiment, results, and prompt editing work", async ({ page }, t
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Try the assistant/ })).toBeVisible();
   await expect(page.getByLabel("Model")).toHaveValue("claude-opus-5");
+  await expect(page.getByLabel("Prompt variant")).toHaveValue("prompt-aerin-original-experimental");
+  await expect(page.getByRole("link", { name: /Resource Portal connected/ })).toBeVisible();
   const capture = page.getByTestId("capture-toggle");
   await expect(capture).toHaveAttribute("aria-pressed", "true");
 

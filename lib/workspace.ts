@@ -1,5 +1,6 @@
 import { get, put } from "@vercel/blob";
 import type { Workspace } from "./types";
+import { canonicalPrompts } from "./canonical-prompts";
 
 const PATHNAME = "entropy-lab/workspace.json";
 
@@ -8,26 +9,9 @@ const now = () => new Date().toISOString();
 export function defaultWorkspace(): Workspace {
   const createdAt = now();
   return {
-    version: 1,
+    version: 3,
     captureEnabled: true,
-    prompts: [
-      {
-        id: "prompt-direct",
-        name: "Direct operator",
-        content:
-          "You are an operational assistant for small, high-impact organizations. Lead with the answer. Be concise, practical, and explicit about assumptions. Use bullets when they make the next action clearer.",
-        createdAt,
-        updatedAt: createdAt,
-      },
-      {
-        id: "prompt-clarifying",
-        name: "Clarify first",
-        content:
-          "You are an operational assistant for small, high-impact organizations. Identify the decision behind the request. If one missing fact would materially change the answer, ask one short question; otherwise state your assumption and answer directly.",
-        createdAt,
-        updatedAt: createdAt,
-      },
-    ],
+    prompts: canonicalPrompts(),
     cases: [],
     collections: [
       { id: "collection-inbox", name: "Inbox", caseIds: [], createdAt },
@@ -40,6 +24,29 @@ export function defaultWorkspace(): Workspace {
 
 let localWorkspace: Workspace | null = null;
 
+export function upgradeWorkspace(value: unknown): { workspace: Workspace; migrated: boolean } {
+  const candidate = value as Partial<Omit<Workspace, "version">> & { version?: number };
+  if (candidate.version === 3 && Array.isArray(candidate.prompts)) {
+    return { workspace: candidate as Workspace, migrated: false };
+  }
+  if ((candidate.version === 1 || candidate.version === 2) && Array.isArray(candidate.prompts)) {
+    const placeholders = new Set(["prompt-direct", "prompt-clarifying"]);
+    const canonicalIds = new Set(canonicalPrompts().map((prompt) => prompt.id));
+    const userPrompts = candidate.prompts.filter(
+      (prompt) => !placeholders.has(prompt.id) && !canonicalIds.has(prompt.id),
+    );
+    return {
+      workspace: {
+        ...(candidate as Omit<Workspace, "version" | "prompts">),
+        version: 3,
+        prompts: [...canonicalPrompts(), ...userPrompts],
+      },
+      migrated: true,
+    };
+  }
+  return { workspace: defaultWorkspace(), migrated: true };
+}
+
 export async function loadWorkspace(): Promise<Workspace> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     localWorkspace ??= defaultWorkspace();
@@ -49,7 +56,9 @@ export async function loadWorkspace(): Promise<Workspace> {
   try {
     const result = await get(PATHNAME, { access: "private", useCache: false });
     if (!result || result.statusCode !== 200 || !result.stream) return saveWorkspace(defaultWorkspace());
-    return JSON.parse(await new Response(result.stream).text()) as Workspace;
+    const parsed = JSON.parse(await new Response(result.stream).text());
+    const { workspace, migrated } = upgradeWorkspace(parsed);
+    return migrated ? saveWorkspace(workspace) : workspace;
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.includes("not found") || message.includes("404")) return saveWorkspace(defaultWorkspace());

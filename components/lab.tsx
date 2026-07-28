@@ -81,7 +81,12 @@ async function generate(
     body: JSON.stringify({ modelId, systemPrompt, messages }),
   });
   if (!response.ok) throw new Error(await readError(response));
-  return (await response.json()) as { output: string; latencyMs: number };
+  return (await response.json()) as {
+    output: string;
+    latencyMs: number;
+    portalSearches: number;
+    portalQueries: string[];
+  };
 }
 
 async function checkpointResult(result: RunResult) {
@@ -326,6 +331,8 @@ function Playground({
         role: "assistant",
         content: result.output,
         modelId,
+        portalSearches: result.portalSearches,
+        portalQueries: result.portalQueries,
         createdAt: isoNow(),
       };
       setMessages([...nextMessages, assistantMessage]);
@@ -371,6 +378,18 @@ function Playground({
               {models.map((model) => <option value={model.id} key={model.id}>{model.name}</option>)}
             </select>
           </div>
+          <a
+            className="portal-access"
+            href="https://aerin.bot/human"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span className="capture-dot" />
+            <span>
+              <strong>Resource Portal connected</strong>
+              <small>Every prompt can search live portal articles</small>
+            </span>
+          </a>
           <div className="prompt-preview">
             <span>System prompt</span>
             <p>{selectedPrompt?.content}</p>
@@ -398,6 +417,7 @@ function Playground({
                 <div className="message-meta">
                   <strong>{message.role === "user" ? "You" : "Assistant"}</strong>
                   {message.modelId && <span>{models.find((model) => model.id === message.modelId)?.name || message.modelId}</span>}
+                  {Boolean(message.portalSearches) && <span>· {message.portalSearches} portal search{message.portalSearches === 1 ? "" : "es"}</span>}
                 </div>
                 {message.role === "assistant" ? (
                   <div className="markdown"><ReactMarkdown>{message.content}</ReactMarkdown></div>
@@ -568,7 +588,16 @@ function Experiments({
         let result: RunResult;
         try {
           const generated = await generate(modelId, prompt.content, [{ role: "user", content: testCase.text }]);
-          result = { id, caseId: testCase.id, promptId: prompt.id, modelId, output: generated.output, latencyMs: generated.latencyMs };
+          result = {
+            id,
+            caseId: testCase.id,
+            promptId: prompt.id,
+            modelId,
+            output: generated.output,
+            latencyMs: generated.latencyMs,
+            portalSearches: generated.portalSearches,
+            portalQueries: generated.portalQueries,
+          };
         } catch (error) {
           result = {
             id,
@@ -846,7 +875,7 @@ function ResultsMatrix({ run }: { run: ExperimentRun }) {
                         <button className={result.error ? "result-card error" : "result-card"} onClick={() => void openResult(result)}>
                           <span>{result.error || result.output}</span>
                           <small>
-                            {loadingResult === result.id ? "Loading…" : result.error ? "Failed" : `${(result.latencyMs / 1000).toFixed(1)}s`}
+                            {loadingResult === result.id ? "Loading…" : result.error ? "Failed" : `${(result.latencyMs / 1000).toFixed(1)}s${result.portalSearches ? ` · ${result.portalSearches} portal` : ""}`}
                             {expanded?.id === result.id ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                           </small>
                         </button>
@@ -864,6 +893,7 @@ function ResultsMatrix({ run }: { run: ExperimentRun }) {
           <div>
             <strong>{run.promptSnapshots.find((prompt) => prompt.id === expanded.promptId)?.name}</strong>
             <span> · {run.modelSnapshots.find((model) => model.id === expanded.modelId)?.name || expanded.modelId}</span>
+            {Boolean(expanded.portalSearches) && <span> · Portal: {expanded.portalQueries?.join(", ")}</span>}
           </div>
           <div className="result-detail-actions">
             <button className="text-button" onClick={() => navigator.clipboard.writeText(expanded.output)}><Copy size={14} /> Copy</button>

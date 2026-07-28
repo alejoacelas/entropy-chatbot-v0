@@ -21,7 +21,7 @@ export async function PUT(request: Request) {
   try {
     const payload = (await request.json()) as { workspace?: Workspace; baseUpdatedAt?: string } & Partial<Workspace>;
     const workspace = (payload.workspace ?? payload) as Workspace;
-    if (workspace.version !== 1 || !Array.isArray(workspace.prompts)) {
+    if (workspace.version !== 3 || !Array.isArray(workspace.prompts)) {
       return NextResponse.json({ error: "Invalid workspace" }, { status: 400 });
     }
     if (payload.baseUpdatedAt) {

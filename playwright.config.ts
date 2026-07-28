@@ -16,7 +16,6 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       ANTHROPIC_API_KEY: "",
-      APP_ACCESS_CODE: "",
       BLOB_READ_WRITE_TOKEN: "",
     },
   },

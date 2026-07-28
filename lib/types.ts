@@ -25,6 +25,8 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   modelId?: string;
+  portalSearches?: number;
+  portalQueries?: string[];
   createdAt: string;
 };
 
@@ -35,6 +37,8 @@ export type RunResult = {
   modelId: string;
   output: string;
   latencyMs: number;
+  portalSearches?: number;
+  portalQueries?: string[];
   error?: string;
   truncated?: boolean;
 };
@@ -58,7 +62,7 @@ export type RunSummary = Omit<ExperimentRun, "results" | "caseSnapshots" | "prom
 };
 
 export type Workspace = {
-  version: 1;
+  version: 3;
   captureEnabled: boolean;
   prompts: PromptVariant[];
   cases: TestCase[];
