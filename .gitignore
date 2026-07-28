@@ -4,6 +4,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
+.data/
 
 # Logs
 logs
@@ -23,6 +24,8 @@ dist-ssr/
 build/
 .next/
 out/
+playwright-report/
+test-results/
 
 # Cache
 .cache/
@@ -46,3 +49,5 @@ tailwind.output.css
 *.sw?
 *.swp
 *.swo
+.vercel
+.env*
