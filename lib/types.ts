@@ -36,6 +36,7 @@ export type RunResult = {
   output: string;
   latencyMs: number;
   error?: string;
+  truncated?: boolean;
 };
 
 export type ExperimentRun = {
@@ -45,7 +46,15 @@ export type ExperimentRun = {
   caseIds: string[];
   promptIds: string[];
   modelIds: string[];
+  caseSnapshots: Array<{ id: string; text: string }>;
+  promptSnapshots: Array<{ id: string; name: string; content: string }>;
+  modelSnapshots: Array<{ id: string; name: string }>;
   results: RunResult[];
+};
+
+export type RunSummary = Omit<ExperimentRun, "results" | "caseSnapshots" | "promptSnapshots" | "modelSnapshots"> & {
+  resultCount: number;
+  errorCount: number;
 };
 
 export type Workspace = {
@@ -55,7 +64,7 @@ export type Workspace = {
   cases: TestCase[];
   collections: Collection[];
   messages: ChatMessage[];
-  runs: ExperimentRun[];
+  runs: RunSummary[];
   updatedAt: string;
 };
 

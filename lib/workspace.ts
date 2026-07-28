@@ -47,12 +47,12 @@ export async function loadWorkspace(): Promise<Workspace> {
   }
 
   try {
-    const result = await get(PATHNAME, { access: "private" });
-    if (!result || result.statusCode !== 200 || !result.stream) return defaultWorkspace();
+    const result = await get(PATHNAME, { access: "private", useCache: false });
+    if (!result || result.statusCode !== 200 || !result.stream) return saveWorkspace(defaultWorkspace());
     return JSON.parse(await new Response(result.stream).text()) as Workspace;
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    if (message.includes("not found") || message.includes("404")) return defaultWorkspace();
+    if (message.includes("not found") || message.includes("404")) return saveWorkspace(defaultWorkspace());
     throw error;
   }
 }
@@ -60,6 +60,9 @@ export async function loadWorkspace(): Promise<Workspace> {
 export async function saveWorkspace(workspace: Workspace): Promise<Workspace> {
   const saved = { ...workspace, updatedAt: now() };
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("BLOB_READ_WRITE_TOKEN is not configured");
+    }
     localWorkspace = saved;
     return saved;
   }

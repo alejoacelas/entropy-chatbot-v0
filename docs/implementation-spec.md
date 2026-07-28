@@ -8,6 +8,7 @@ A user can ask a real question, keep it as a test case by default, and compare a
 
 - Capture playground inputs by default. The capture state remains visible beside the page title.
 - Treat a run as the product of selected cases × prompts × models. Show this arithmetic before spending tokens.
+- Default to Claude Opus 5 while keeping every model returned by Anthropic selectable.
 - Name and save runs automatically. Naming is optional organization, not a prerequisite.
 - Keep cases visible and reorderable before a run. Accept pasted lines, CSV, JSON, JSONL, and text.
 - Keep prompt variants editable in the same app.
@@ -18,8 +19,11 @@ A user can ask a real question, keep it as a test case by default, and compare a
 
 - Next.js app and API routes deploy as one Vercel project.
 - Anthropic’s Models API supplies the available model list; the Messages API generates chat and experiment responses.
-- A private Vercel Blob stores the workspace. Local development falls back to process memory.
-- The workspace schema is versioned. It contains prompts, cases, sets, chat messages, and runs.
+- A shared access code protects the workspace and Anthropic account.
+- A private Vercel Blob stores prompts, cases, and run summaries. Each completion is checkpointed separately, so accumulated results cannot push the workspace past Vercel’s request limit.
+- Runs snapshot their case text, prompt content, and model labels. Editing the library cannot rewrite history.
+- Blob reads bypass cache and workspace edits reject stale writes instead of silently overwriting newer state.
+- Local development falls back to process memory.
 
 ## Acceptance checks
 
@@ -28,5 +32,7 @@ A user can ask a real question, keep it as a test case by default, and compare a
 - Cases can be pasted, imported, removed from a set, dragged, or moved with buttons.
 - At least one prompt and model are required; the run button shows the exact completion count.
 - A completed run appears as a matrix and remains in Library → Runs.
+- Any old run can be reopened with its original cases, prompts, models, and full outputs.
+- Captured cases can be assigned to multiple sets from Library → Test sets.
 - Prompt variants can be created and edited.
 - Desktop and mobile layouts expose the main transitions.

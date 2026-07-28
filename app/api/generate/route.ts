@@ -16,8 +16,14 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as GenerateBody;
-    if (!body.modelId || !body.messages?.length) {
+    if (!body.modelId?.startsWith("claude-") || !body.messages?.length) {
       return NextResponse.json({ error: "Model and messages are required" }, { status: 400 });
+    }
+    const totalCharacters =
+      (body.systemPrompt?.length ?? 0) +
+      body.messages.reduce((total, message) => total + (message.content?.length ?? 0), 0);
+    if (body.messages.length > 50 || totalCharacters > 100_000) {
+      return NextResponse.json({ error: "This request is too large" }, { status: 413 });
     }
 
     const startedAt = Date.now();

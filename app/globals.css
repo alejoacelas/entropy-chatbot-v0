@@ -161,9 +161,13 @@ select:hover, input:hover, textarea:hover { border-color: #aebbb4; }
 .result-card > span { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; font-size: 11px; line-height: 1.5; }
 .result-card small { display: flex; align-items: center; gap: 4px; color: var(--green); margin-top: 7px; }
 .result-card.error > span, .result-card.error small { color: var(--red); }
-.result-detail { padding: 20px max(20px, 7%); position: relative; border-top: 1px solid var(--line); }
+.result-detail {
+  position: fixed; right: 24px; bottom: 24px; z-index: 40; width: min(650px, calc(100vw - 48px)); max-height: 72vh;
+  overflow: auto; padding: 20px 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 13px;
+  box-shadow: 0 20px 60px rgba(15, 28, 23, .18);
+}
 .result-detail > div:first-child { margin-bottom: 16px; }
-.result-detail > .text-button { position: absolute; top: 14px; right: 18px; }
+.result-detail-actions { position: absolute; top: 12px; right: 14px; display: flex; gap: 4px; }
 
 .subnav { display: flex; gap: 22px; border-bottom: 1px solid var(--line); }
 .subnav button { border: 0; border-bottom: 2px solid transparent; padding: 11px 2px; margin-bottom: -1px; background: transparent; color: var(--muted); cursor: pointer; }
@@ -195,7 +199,23 @@ select:hover, input:hover, textarea:hover { border-color: #aebbb4; }
 .modal label { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
 .modal textarea { width: 100%; }
 .modal-actions { display: flex; justify-content: end; gap: 8px; margin-top: 20px; }
+.collection-modal { max-height: 88vh; display: flex; flex-direction: column; }
+.collection-picker { margin-top: 16px; border: 1px solid var(--line); border-radius: 9px; overflow: auto; min-height: 180px; max-height: 48vh; }
+.collection-case { display: grid; grid-template-columns: 18px 1fr auto; gap: 9px; align-items: start; padding: 10px 12px; border-bottom: 1px solid var(--soft-line); cursor: pointer; font-size: 12px; }
+.collection-case:hover, .collection-case.selected { background: #f4faf7; }
+.collection-case input { width: 16px; height: 16px; margin: 0; accent-color: var(--green); }
+.collection-case small { color: var(--muted); font: 500 9px "DM Mono", monospace; text-transform: uppercase; }
+.selection-count { margin-right: auto; align-self: center; color: var(--muted); font-size: 11px; }
 .loading-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); }
+.login-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 50% 10%, #edf5f0, var(--paper) 48%); }
+.login-card { width: min(410px, 100%); padding: 34px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.login-mark { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 13px; color: var(--lime); background: var(--ink); margin-bottom: 22px; }
+.login-card h1 { margin: 6px 0 8px; font-size: 28px; letter-spacing: -.035em; }
+.login-card > p:not(.eyebrow) { margin: 0 0 24px; color: var(--muted); line-height: 1.55; }
+.login-card label { margin-bottom: 7px; font-size: 12px; font-weight: 700; }
+.login-card input { margin-bottom: 12px; }
+.login-card .primary { margin-top: 5px; }
+.login-error { margin-bottom: 8px; color: var(--red); font-size: 12px; }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 

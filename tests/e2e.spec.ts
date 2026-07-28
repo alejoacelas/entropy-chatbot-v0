@@ -18,6 +18,7 @@ test("capture, experiment, results, and prompt editing work", async ({ page }, t
 
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Try the assistant/ })).toBeVisible();
+  await expect(page.getByLabel("Model")).toHaveValue("claude-opus-5");
   const capture = page.getByTestId("capture-toggle");
   await expect(capture).toHaveAttribute("aria-pressed", "true");
 
@@ -49,6 +50,16 @@ test("capture, experiment, results, and prompt editing work", async ({ page }, t
   await page.getByLabel("System prompt").fill("Answer in one sentence.");
   await page.getByRole("button", { name: "Save prompt" }).click();
   await expect(page.getByRole("heading", { name: "Short answer" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Test sets/ }).click();
+  await page.getByRole("button", { name: "Manage cases" }).click();
+  await expect(page.getByRole("dialog", { name: "Manage test set" })).toBeVisible();
+  await expect(page.getByText("3 selected")).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).click();
+
+  await page.getByRole("button", { name: /Runs/ }).click();
+  await page.getByRole("button", { name: "Open results" }).click();
+  await expect(page.getByText("6 completions · 0 errors")).toBeVisible();
 });
 
 test("mobile navigation and composer remain usable", async ({ page }, testInfo) => {

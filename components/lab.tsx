@@ -22,7 +22,7 @@ import {
   X,
 } from "lucide-react";
 import Papa from "papaparse";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import type {
   ChatMessage,
@@ -30,6 +30,7 @@ import type {
   ExperimentRun,
   ModelOption,
   PromptVariant,
+  RunResult,
   TestCase,
   Workspace,
 } from "@/lib/types";
@@ -39,6 +40,26 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 
 const uid = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 const isoNow = () => new Date().toISOString();
+const CAPTURE_KEY = "entropy-lab-capture";
+const CAPTURE_EVENT = "entropy-lab-capture-change";
+
+function subscribeCapture(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(CAPTURE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(CAPTURE_EVENT, callback);
+  };
+}
+
+function captureSnapshot() {
+  return window.localStorage.getItem(CAPTURE_KEY) !== "off";
+}
+
+function setCapturePreference(enabled: boolean) {
+  window.localStorage.setItem(CAPTURE_KEY, enabled ? "on" : "off");
+  window.dispatchEvent(new Event(CAPTURE_EVENT));
+}
 
 async function readError(response: Response) {
   try {
@@ -61,6 +82,16 @@ async function generate(
   });
   if (!response.ok) throw new Error(await readError(response));
   return (await response.json()) as { output: string; latencyMs: number };
+}
+
+async function checkpointResult(result: RunResult) {
+  const response = await fetch(`/api/results/${result.id}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(result),
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as RunResult;
 }
 
 async function mapWithConcurrency<T, R>(
@@ -105,14 +136,22 @@ export function Lab() {
   }, []);
 
   const persist = async (next: Workspace) => {
+    const baseUpdatedAt = workspace?.updatedAt;
     setWorkspace(next);
     setSaveState("saving");
     try {
       const response = await fetch("/api/workspace", {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(next),
+        body: JSON.stringify({ workspace: next, baseUpdatedAt }),
       });
+      if (response.status === 409) {
+        const conflict = (await response.json()) as { error: string; workspace: Workspace };
+        setWorkspace(conflict.workspace);
+        setSaveState("error");
+        setNotice(conflict.error);
+        return;
+      }
       if (!response.ok) throw new Error(await readError(response));
       setWorkspace((await response.json()) as Workspace);
       setSaveState("saved");
@@ -175,10 +214,16 @@ export function Lab() {
         />
       )}
       {view === "experiments" && (
-        <Experiments workspace={workspace} models={models} persist={persist} setNotice={setNotice} />
+        <Experiments
+          workspace={workspace}
+          models={models}
+          persist={persist}
+          replaceWorkspace={setWorkspace}
+          setNotice={setNotice}
+        />
       )}
       {view === "library" && (
-        <LibraryView workspace={workspace} persist={persist} setNotice={setNotice} />
+        <LibraryView workspace={workspace} models={models} persist={persist} setNotice={setNotice} />
       )}
     </main>
   );
@@ -220,20 +265,21 @@ function Playground({
   const [promptId, setPromptId] = useState(workspace.prompts[0]?.id ?? "");
   const [modelId, setModelId] = useState(models[0]?.id ?? "");
   const [sending, setSending] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const captureEnabled = useSyncExternalStore(subscribeCapture, captureSnapshot, () => true);
   const endRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const messages = messagesRef.current;
     if (messages) messages.scrollTop = messages.scrollHeight;
-  }, [workspace.messages]);
+  }, [messages]);
 
   const selectedPrompt = workspace.prompts.find((prompt) => prompt.id === promptId);
-  const toggleCapture = () =>
-    persist({ ...workspace, captureEnabled: !workspace.captureEnabled, updatedAt: isoNow() });
+  const toggleCapture = () => setCapturePreference(!captureEnabled);
 
   const clearChat = () => {
-    if (!workspace.messages.length || window.confirm("Clear this conversation? Saved test cases will remain.")) {
-      void persist({ ...workspace, messages: [], updatedAt: isoNow() });
+    if (!messages.length || window.confirm("Clear this conversation? Saved test cases will remain.")) {
+      setMessages([]);
     }
   };
 
@@ -245,9 +291,10 @@ function Playground({
     setNotice(null);
     const createdAt = isoNow();
     const userMessage: ChatMessage = { id: uid("message"), role: "user", content: text, createdAt };
-    let next: Workspace = { ...workspace, messages: [...workspace.messages, userMessage], updatedAt: createdAt };
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
 
-    if (workspace.captureEnabled) {
+    if (captureEnabled) {
       const testCase: TestCase = {
         id: uid("case"),
         text,
@@ -255,23 +302,24 @@ function Playground({
         createdAt,
       };
       const inbox = workspace.collections.find((collection) => collection.id === "collection-inbox");
-      next = {
-        ...next,
-        cases: [...next.cases, testCase],
-        collections: next.collections.map((collection) =>
+      const next = {
+        ...workspace,
+        cases: [...workspace.cases, testCase],
+        collections: workspace.collections.map((collection) =>
           collection.id === inbox?.id
             ? { ...collection, caseIds: [...collection.caseIds, testCase.id] }
             : collection,
         ),
+        updatedAt: createdAt,
       };
+      await persist(next);
     }
-    await persist(next);
 
     try {
       const result = await generate(
         modelId,
         selectedPrompt.content,
-        next.messages.map(({ role, content }) => ({ role, content })),
+        nextMessages.map(({ role, content }) => ({ role, content })),
       );
       const assistantMessage: ChatMessage = {
         id: uid("message"),
@@ -280,7 +328,7 @@ function Playground({
         modelId,
         createdAt: isoNow(),
       };
-      await persist({ ...next, messages: [...next.messages, assistantMessage], updatedAt: isoNow() });
+      setMessages([...nextMessages, assistantMessage]);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Could not get a response");
     } finally {
@@ -296,15 +344,15 @@ function Playground({
           <h1>Try the assistant. Keep the useful edge cases.</h1>
         </div>
         <button
-          className={workspace.captureEnabled ? "capture-toggle on" : "capture-toggle off"}
+          className={captureEnabled ? "capture-toggle on" : "capture-toggle off"}
           onClick={toggleCapture}
-          aria-pressed={workspace.captureEnabled}
+          aria-pressed={captureEnabled}
           data-testid="capture-toggle"
         >
           <span className="capture-dot" />
           <span>
-            <strong>{workspace.captureEnabled ? "Saving inputs" : "Not saving inputs"}</strong>
-            <small>{workspace.captureEnabled ? "New messages → Inbox" : "This chat stays out of evaluations"}</small>
+            <strong>{captureEnabled ? "Saving inputs" : "Not saving inputs"}</strong>
+            <small>{captureEnabled ? "New messages → shared Inbox" : "This chat stays out of evaluations"}</small>
           </span>
         </button>
       </div>
@@ -334,18 +382,18 @@ function Playground({
 
         <div className="chat-panel">
           <div className="chat-toolbar">
-            <span>{workspace.messages.length ? `${workspace.messages.filter((message) => message.role === "user").length} turns` : "New conversation"}</span>
+            <span>{messages.length ? `${messages.filter((message) => message.role === "user").length} turns` : "New conversation"}</span>
             <button className="text-button" onClick={clearChat}><RotateCcw size={14} /> Clear</button>
           </div>
           <div className="messages" aria-live="polite" ref={messagesRef}>
-            {!workspace.messages.length && (
+            {!messages.length && (
               <div className="empty-chat">
                 <span className="empty-icon"><MessageSquare /></span>
                 <h2>Ask a real question</h2>
                 <p>Every input is added to the Inbox by default, ready to compare across prompts and models.</p>
               </div>
             )}
-            {workspace.messages.map((message) => (
+            {messages.map((message) => (
               <article className={`message ${message.role}`} key={message.id}>
                 <div className="message-meta">
                   <strong>{message.role === "user" ? "You" : "Assistant"}</strong>
@@ -388,11 +436,13 @@ function Experiments({
   workspace,
   models,
   persist,
+  replaceWorkspace,
   setNotice,
 }: {
   workspace: Workspace;
   models: ModelOption[];
   persist: (workspace: Workspace) => Promise<void>;
+  replaceWorkspace: (workspace: Workspace) => void;
   setNotice: (notice: string | null) => void;
 }) {
   const [collectionId, setCollectionId] = useState(workspace.collections[0]?.id ?? "");
@@ -401,13 +451,30 @@ function Experiments({
   const [quickAdd, setQuickAdd] = useState("");
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
-  const [expandedResult, setExpandedResult] = useState<string | null>(null);
+  const [latestRun, setLatestRun] = useState<ExperimentRun | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const selectedCollection = workspace.collections.find((collection) => collection.id === collectionId) ?? workspace.collections[0];
   const cases = (selectedCollection?.caseIds ?? [])
     .map((id) => workspace.cases.find((testCase) => testCase.id === id))
     .filter((testCase): testCase is TestCase => Boolean(testCase));
-  const latestRun = workspace.runs[0];
+  const latestSummary = workspace.runs[0];
+
+  useEffect(() => {
+    if (!latestSummary) {
+      return;
+    }
+    const controller = new AbortController();
+    fetch(`/api/runs/${latestSummary.id}`, { signal: controller.signal, cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(await readError(response));
+        return response.json() as Promise<ExperimentRun>;
+      })
+      .then((run) => setLatestRun(run))
+      .catch((error) => {
+        if (error instanceof Error && error.name !== "AbortError") setNotice(error.message);
+      });
+    return () => controller.abort();
+  }, [latestSummary, setNotice]);
 
   const updateCollection = (nextCaseIds: string[]) =>
     persist({
@@ -442,8 +509,9 @@ function Experiments({
       try {
         const text = String(reader.result ?? "");
         let values: string[] = [];
-        if (file.name.endsWith(".json") || file.name.endsWith(".jsonl")) {
-          const parsed = file.name.endsWith(".jsonl")
+        const extension = file.name.toLowerCase();
+        if (extension.endsWith(".json") || extension.endsWith(".jsonl")) {
+          const parsed = extension.endsWith(".jsonl")
             ? text.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line))
             : JSON.parse(text);
           const rows = Array.isArray(parsed) ? parsed : parsed.prompts || parsed.cases || [];
@@ -452,9 +520,14 @@ function Experiments({
               ? row
               : String((row as Record<string, unknown>).prompt || (row as Record<string, unknown>).question || (row as Record<string, unknown>).input || ""),
           );
-        } else if (file.name.endsWith(".csv")) {
+        } else if (extension.endsWith(".csv")) {
           const parsed = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
-          values = parsed.data.map((row) => row.prompt || row.question || row.input || Object.values(row)[0] || "");
+          const knownHeader = (parsed.meta.fields ?? []).find((field) =>
+            ["prompt", "question", "input"].includes(field.toLowerCase()),
+          );
+          values = knownHeader
+            ? parsed.data.map((row) => row[knownHeader] || "")
+            : Papa.parse<string[]>(text, { skipEmptyLines: true }).data.map((row) => row[0] || "");
         } else {
           values = text.split(/\r?\n/);
         }
@@ -489,37 +562,60 @@ function Experiments({
     setProgress({ done: 0, total: combinations.length });
     setNotice(null);
 
-    const results = await mapWithConcurrency(combinations, 4, async ({ testCase, prompt, modelId }) => {
-      const id = uid("result");
-      try {
-        const generated = await generate(modelId, prompt.content, [{ role: "user", content: testCase.text }]);
-        return { id, caseId: testCase.id, promptId: prompt.id, modelId, output: generated.output, latencyMs: generated.latencyMs };
-      } catch (error) {
-        return {
+    try {
+      const results = await mapWithConcurrency(combinations, 4, async ({ testCase, prompt, modelId }) => {
+        const id = uid("result");
+        let result: RunResult;
+        try {
+          const generated = await generate(modelId, prompt.content, [{ role: "user", content: testCase.text }]);
+          result = { id, caseId: testCase.id, promptId: prompt.id, modelId, output: generated.output, latencyMs: generated.latencyMs };
+        } catch (error) {
+          result = {
+            id,
+            caseId: testCase.id,
+            promptId: prompt.id,
+            modelId,
+            output: "",
+            latencyMs: 0,
+            error: error instanceof Error ? error.message : "Generation failed",
+          };
+        }
+        try {
+          return await checkpointResult(result);
+        } finally {
+          setProgress((current) => ({ ...current, done: current.done + 1 }));
+        }
+      });
+      const createdAt = isoNow();
+      const experimentRun: ExperimentRun = {
+        id: uid("run"),
+        name: `${selectedCollection?.name || "Experiment"} · ${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date())}`,
+        createdAt,
+        caseIds: cases.map((item) => item.id),
+        promptIds: selectedPromptIds,
+        modelIds: selectedModelIds,
+        caseSnapshots: cases.map((item) => ({ id: item.id, text: item.text })),
+        promptSnapshots: promptVariants.map(({ id, name, content }) => ({ id, name, content })),
+        modelSnapshots: selectedModelIds.map((id) => ({
           id,
-          caseId: testCase.id,
-          promptId: prompt.id,
-          modelId,
-          output: "",
-          latencyMs: 0,
-          error: error instanceof Error ? error.message : "Generation failed",
-        };
-      } finally {
-        setProgress((current) => ({ ...current, done: current.done + 1 }));
-      }
-    });
-    const createdAt = isoNow();
-    const experimentRun: ExperimentRun = {
-      id: uid("run"),
-      name: `${selectedCollection?.name || "Experiment"} · ${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date())}`,
-      createdAt,
-      caseIds: cases.map((item) => item.id),
-      promptIds: selectedPromptIds,
-      modelIds: selectedModelIds,
-      results,
-    };
-    await persist({ ...workspace, runs: [experimentRun, ...workspace.runs], updatedAt: createdAt });
-    setRunning(false);
+          name: models.find((model) => model.id === id)?.name || id,
+        })),
+        results,
+      };
+      const response = await fetch(`/api/runs/${experimentRun.id}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(experimentRun),
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      const saved = (await response.json()) as { run: ExperimentRun; workspace: Workspace };
+      replaceWorkspace(saved.workspace);
+      setLatestRun(saved.run);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The run could not be saved");
+    } finally {
+      setRunning(false);
+    }
   };
 
   return (
@@ -632,13 +728,7 @@ function Experiments({
       </div>
 
       {latestRun && (
-        <ResultsMatrix
-          run={latestRun}
-          workspace={workspace}
-          models={models}
-          expanded={expandedResult}
-          setExpanded={setExpandedResult}
-        />
+        <ResultsMatrix run={latestRun} />
       )}
     </section>
   );
@@ -688,35 +778,46 @@ function SelectorSection({
   );
 }
 
-function ResultsMatrix({
-  run,
-  workspace,
-  models,
-  expanded,
-  setExpanded,
-}: {
-  run: ExperimentRun;
-  workspace: Workspace;
-  models: ModelOption[];
-  expanded: string | null;
-  setExpanded: (id: string | null) => void;
-}) {
+function ResultsMatrix({ run }: { run: ExperimentRun }) {
+  const [expanded, setExpanded] = useState<RunResult | null>(null);
+  const [loadingResult, setLoadingResult] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const columns = run.promptIds.flatMap((promptId) =>
     run.modelIds.map((modelId) => ({ promptId, modelId })),
   );
-  const exportRun = () => {
-    const blob = new Blob([JSON.stringify(run, null, 2)], { type: "application/json" });
+  const openResult = async (result: RunResult) => {
+    if (expanded?.id === result.id) return setExpanded(null);
+    if (!result.truncated) return setExpanded(result);
+    setLoadingResult(result.id);
+    const response = await fetch(`/api/results/${result.id}`, { cache: "no-store" });
+    setLoadingResult(null);
+    if (!response.ok) return;
+    setExpanded((await response.json()) as RunResult);
+  };
+  const exportRun = async () => {
+    setExporting(true);
+    const fullResults = await Promise.all(
+      run.results.map(async (result) => {
+        if (!result.truncated) return result;
+        const response = await fetch(`/api/results/${result.id}`, { cache: "no-store" });
+        return response.ok ? (response.json() as Promise<RunResult>) : result;
+      }),
+    );
+    const blob = new Blob([JSON.stringify({ ...run, results: fullResults }, null, 2)], { type: "application/json" });
     const anchor = document.createElement("a");
     anchor.href = URL.createObjectURL(blob);
     anchor.download = `${run.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.json`;
     anchor.click();
     URL.revokeObjectURL(anchor.href);
+    setExporting(false);
   };
   return (
     <div className="results-section">
       <div className="results-heading">
         <div><p className="eyebrow">LATEST RUN</p><h2>{run.name}</h2><span>{run.results.length} completions · {run.results.filter((result) => result.error).length} errors</span></div>
-        <button className="secondary" onClick={exportRun}><Download size={15} /> Export JSON</button>
+        <button className="secondary" disabled={exporting} onClick={() => void exportRun()}>
+          {exporting ? <LoaderCircle className="spin" size={15} /> : <Download size={15} />} {exporting ? "Preparing…" : "Export JSON"}
+        </button>
       </div>
       <div className="matrix-wrap">
         <table className="results-matrix">
@@ -725,8 +826,8 @@ function ResultsMatrix({
               <th>Test case</th>
               {columns.map((column) => (
                 <th key={`${column.promptId}-${column.modelId}`}>
-                  <strong>{workspace.prompts.find((prompt) => prompt.id === column.promptId)?.name}</strong>
-                  <span>{models.find((model) => model.id === column.modelId)?.name || column.modelId}</span>
+                  <strong>{run.promptSnapshots.find((prompt) => prompt.id === column.promptId)?.name}</strong>
+                  <span>{run.modelSnapshots.find((model) => model.id === column.modelId)?.name || column.modelId}</span>
                 </th>
               ))}
             </tr>
@@ -734,7 +835,7 @@ function ResultsMatrix({
           <tbody>
             {run.caseIds.map((caseId, index) => (
               <tr key={caseId}>
-                <th><span>{index + 1}</span>{workspace.cases.find((item) => item.id === caseId)?.text || "Deleted test case"}</th>
+                <th><span>{index + 1}</span>{run.caseSnapshots.find((item) => item.id === caseId)?.text || "Unknown test case"}</th>
                 {columns.map((column) => {
                   const result = run.results.find(
                     (item) => item.caseId === caseId && item.promptId === column.promptId && item.modelId === column.modelId,
@@ -742,9 +843,12 @@ function ResultsMatrix({
                   return (
                     <td key={`${column.promptId}-${column.modelId}`}>
                       {result && (
-                        <button className={result.error ? "result-card error" : "result-card"} onClick={() => setExpanded(expanded === result.id ? null : result.id)}>
+                        <button className={result.error ? "result-card error" : "result-card"} onClick={() => void openResult(result)}>
                           <span>{result.error || result.output}</span>
-                          <small>{result.error ? "Failed" : `${(result.latencyMs / 1000).toFixed(1)}s`} {expanded === result.id ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</small>
+                          <small>
+                            {loadingResult === result.id ? "Loading…" : result.error ? "Failed" : `${(result.latencyMs / 1000).toFixed(1)}s`}
+                            {expanded?.id === result.id ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                          </small>
                         </button>
                       )}
                     </td>
@@ -755,36 +859,41 @@ function ResultsMatrix({
           </tbody>
         </table>
       </div>
-      {expanded && (() => {
-        const result = run.results.find((item) => item.id === expanded);
-        if (!result) return null;
-        return (
-          <div className="result-detail">
-            <div>
-              <strong>{workspace.prompts.find((prompt) => prompt.id === result.promptId)?.name}</strong>
-              <span> · {models.find((model) => model.id === result.modelId)?.name || result.modelId}</span>
-            </div>
-            <button className="text-button" onClick={() => navigator.clipboard.writeText(result.output)}><Copy size={14} /> Copy</button>
-            <div className="markdown"><ReactMarkdown>{result.error || result.output}</ReactMarkdown></div>
+      {expanded && (
+        <div className="result-detail">
+          <div>
+            <strong>{run.promptSnapshots.find((prompt) => prompt.id === expanded.promptId)?.name}</strong>
+            <span> · {run.modelSnapshots.find((model) => model.id === expanded.modelId)?.name || expanded.modelId}</span>
           </div>
-        );
-      })()}
+          <div className="result-detail-actions">
+            <button className="text-button" onClick={() => navigator.clipboard.writeText(expanded.output)}><Copy size={14} /> Copy</button>
+            <button className="text-button" onClick={() => setExpanded(null)}><X size={14} /> Close</button>
+          </div>
+          <div className="markdown"><ReactMarkdown>{expanded.error || expanded.output}</ReactMarkdown></div>
+        </div>
+      )}
     </div>
   );
 }
 
 function LibraryView({
   workspace,
+  models,
   persist,
   setNotice,
 }: {
   workspace: Workspace;
+  models: ModelOption[];
   persist: (workspace: Workspace) => Promise<void>;
   setNotice: (notice: string | null) => void;
 }) {
   const [tab, setTab] = useState<"prompts" | "sets" | "runs">("prompts");
   const [editing, setEditing] = useState<PromptVariant | null>(null);
   const [newCollection, setNewCollection] = useState("");
+  const [selectedRun, setSelectedRun] = useState<ExperimentRun | null>(null);
+  const [loadingRun, setLoadingRun] = useState<string | null>(null);
+  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
+  void models;
   const startPrompt = () => {
     const createdAt = isoNow();
     setEditing({ id: uid("prompt"), name: "Untitled prompt", content: "", createdAt, updatedAt: createdAt });
@@ -812,6 +921,26 @@ function LibraryView({
     const collection: Collection = { id: uid("collection"), name: newCollection.trim(), caseIds: [], createdAt: isoNow() };
     await persist({ ...workspace, collections: [...workspace.collections, collection], updatedAt: isoNow() });
     setNewCollection("");
+  };
+  const openRun = async (id: string) => {
+    setLoadingRun(id);
+    const response = await fetch(`/api/runs/${id}`, { cache: "no-store" });
+    setLoadingRun(null);
+    if (!response.ok) return setNotice(await readError(response));
+    setSelectedRun((await response.json()) as ExperimentRun);
+  };
+  const saveCollection = async () => {
+    if (!editingCollection?.name.trim()) return;
+    await persist({
+      ...workspace,
+      collections: workspace.collections.map((collection) =>
+        collection.id === editingCollection.id
+          ? { ...editingCollection, name: editingCollection.name.trim() }
+          : collection,
+      ),
+      updatedAt: isoNow(),
+    });
+    setEditingCollection(null);
   };
   return (
     <section className="library-view">
@@ -852,6 +981,7 @@ function LibraryView({
               <article key={collection.id}>
                 <div><h3>{collection.name}</h3><span>{collection.caseIds.length} cases</span></div>
                 <p>{collection.caseIds.slice(0, 3).map((id) => workspace.cases.find((item) => item.id === id)?.text).filter(Boolean).join(" · ") || "Empty set"}</p>
+                <button className="secondary" onClick={() => setEditingCollection({ ...collection, caseIds: [...collection.caseIds] })}>Manage cases</button>
               </article>
             ))}
           </div>
@@ -862,13 +992,17 @@ function LibraryView({
           <div className="library-toolbar"><h2>Saved runs</h2></div>
           <div className="run-list">
             {workspace.runs.map((run) => (
-              <article key={run.id}>
+              <article key={run.id} className="run-row">
                 <div><h3>{run.name}</h3><span>{new Date(run.createdAt).toLocaleString()}</span></div>
-                <div className="run-stats"><span>{run.caseIds.length} cases</span><span>{run.promptIds.length} prompts</span><span>{run.modelIds.length} models</span><strong>{run.results.length} completions</strong></div>
+                <div className="run-stats"><span>{run.caseIds.length} cases</span><span>{run.promptIds.length} prompts</span><span>{run.modelIds.length} models</span><strong>{run.resultCount} completions</strong></div>
+                <button className="secondary" disabled={loadingRun === run.id} onClick={() => void openRun(run.id)}>
+                  {loadingRun === run.id ? <LoaderCircle className="spin" size={14} /> : "Open results"}
+                </button>
               </article>
             ))}
             {!workspace.runs.length && <div className="empty-list">Runs will appear here automatically.</div>}
           </div>
+          {selectedRun && <ResultsMatrix run={selectedRun} />}
         </div>
       )}
 
@@ -879,6 +1013,47 @@ function LibraryView({
             <label>Name<input value={editing.name} onChange={(event) => setEditing({ ...editing, name: event.target.value })} /></label>
             <label>System prompt<textarea rows={14} value={editing.content} onChange={(event) => setEditing({ ...editing, content: event.target.value })} placeholder="Tell the model how to respond…" /></label>
             <div className="modal-actions"><button className="secondary" onClick={() => setEditing(null)}>Cancel</button><button className="primary" disabled={!editing.name.trim() || !editing.content.trim()} onClick={() => void savePrompt()}>Save prompt</button></div>
+          </div>
+        </div>
+      )}
+      {editingCollection && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => setEditingCollection(null)}>
+          <div className="modal collection-modal" role="dialog" aria-modal="true" aria-label="Manage test set" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-heading">
+              <div><p className="eyebrow">TEST SET</p><h2>Choose reusable cases</h2></div>
+              <button aria-label="Close" onClick={() => setEditingCollection(null)}><X /></button>
+            </div>
+            <label>
+              Set name
+              <input value={editingCollection.name} onChange={(event) => setEditingCollection({ ...editingCollection, name: event.target.value })} />
+            </label>
+            <div className="collection-picker">
+              {workspace.cases.map((testCase) => {
+                const checked = editingCollection.caseIds.includes(testCase.id);
+                return (
+                  <label className={checked ? "collection-case selected" : "collection-case"} key={testCase.id}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => setEditingCollection({
+                        ...editingCollection,
+                        caseIds: checked
+                          ? editingCollection.caseIds.filter((id) => id !== testCase.id)
+                          : [...editingCollection.caseIds, testCase.id],
+                      })}
+                    />
+                    <span>{testCase.text}</span>
+                    <small>{testCase.source}</small>
+                  </label>
+                );
+              })}
+              {!workspace.cases.length && <div className="empty-list">Capture or import cases first.</div>}
+            </div>
+            <div className="modal-actions">
+              <span className="selection-count">{editingCollection.caseIds.length} selected</span>
+              <button className="secondary" onClick={() => setEditingCollection(null)}>Cancel</button>
+              <button className="primary" disabled={!editingCollection.name.trim()} onClick={() => void saveCollection()}>Save set</button>
+            </div>
           </div>
         </div>
       )}

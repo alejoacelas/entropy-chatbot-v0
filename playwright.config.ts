@@ -14,6 +14,11 @@ export default defineConfig({
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
     timeout: 120_000,
+    env: {
+      ANTHROPIC_API_KEY: "",
+      APP_ACCESS_CODE: "",
+      BLOB_READ_WRITE_TOKEN: "",
+    },
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
