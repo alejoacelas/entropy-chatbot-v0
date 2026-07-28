@@ -22,6 +22,9 @@ test("capture, experiment, results, and prompt editing work", async ({ page }, t
 
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Try the assistant/ })).toBeVisible();
+  const composerBounds = await page.getByTestId("chat-input").boundingBox();
+  expect(composerBounds && composerBounds.y + composerBounds.height)
+    .toBeLessThanOrEqual(page.viewportSize()!.height);
   await expect(page.getByLabel("Model")).toHaveValue("claude-opus-5");
   await expect(page.getByLabel("Prompt variant")).toHaveValue("prompt-aerin-original-experimental");
   await expect(page.getByRole("link", { name: /Resource Portal connected/ })).toBeVisible();
@@ -72,6 +75,9 @@ test("mobile navigation and composer remain usable", async ({ page }, testInfo) 
   test.skip(testInfo.project.name !== "mobile", "Mobile-only check");
   await page.goto("/");
   await expect(page.getByTestId("chat-input")).toBeVisible();
+  const composerBounds = await page.getByTestId("chat-input").boundingBox();
+  expect(composerBounds && composerBounds.y + composerBounds.height)
+    .toBeLessThanOrEqual(page.viewportSize()!.height);
   await page.getByRole("button", { name: "Experiments" }).click();
   await expect(page.getByRole("heading", { name: /Compare every useful combination/ })).toBeVisible();
 });
