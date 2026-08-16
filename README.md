@@ -1,8 +1,3 @@
----
-human_edit_tracking:
-  enabled: true
-  history: []
----
 # Entropy Lab
 
 Chat, collect test cases, and compare prompt and model variants in one Vercel-native workspace. Claude Opus 5 is the default model.

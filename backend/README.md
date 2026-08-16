@@ -1,8 +1,3 @@
----
-human_edit_tracking:
-  enabled: true
-  history: []
----
 # AI Evaluation Backend
 
 Backend system for running AI evaluations with caching and rate limiting.
